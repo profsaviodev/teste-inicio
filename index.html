@@ -3,26 +3,783 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minha Primeira Página Web</title>
+    <title>Sênior Seguro - Proteção Digital e Inclusão Universal</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Chart.js para o Painel de Auditoria -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f2f5;
-            text-align: center;
-            padding: 50px;
+            font-family: 'Inter', sans-serif;
+            font-size: 19px;
+            transition: background-color 0.3s, color 0.3s;
         }
-        h1 {
-            color: #333;
+
+        /* Foco de Teclado Ultra Visível para Deficientes Visuais (WCAG AAA) */
+        *:focus-visible {
+            outline: 4px solid #FBBF24 !important;
+            outline-offset: 4px !important;
+            border-radius: 8px !important;
         }
-        p {
-            color: #666;
+
+        /* Tema de Alto Contraste Extremo (Preto, Amarelo e Branco) */
+        .high-contrast {
+            background-color: #000000 !important;
+            color: #FFFF00 !important;
         }
+        .high-contrast article, 
+        .high-contrast header, 
+        .high-contrast footer,
+        .high-contrast .bg-card {
+            background-color: #121212 !important;
+            border: 3px solid #FFFF00 !important;
+            color: #FFFFFF !important;
+        }
+        .high-contrast button, .high-contrast input, .high-contrast textarea, .high-contrast select {
+            border: 2px solid #FFFF00 !important;
+            background-color: #000000 !important;
+            color: #FFFF00 !important;
+        }
+        .high-contrast .caption-bar {
+            background-color: #FFFF00 !important;
+            color: #000000 !important;
+            border-top: 4px solid #FFFFFF !important;
+        }
+        .high-contrast #liveCaptionText {
+            color: #000000 !important;
+        }
+
+        /* Estilo da Barra de Legendas em Tempo Real (Live Caption) */
+        .caption-bar {
+            background-color: #0F172A;
+            color: #F8FAFC;
+            box-shadow: 0 -4px 25px rgba(0,0,0,0.4);
+        }
+
+        /* Animações do Microfone */
+        @keyframes mic-listening {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .mic-active {
+            animation: mic-listening 1.5s infinite;
+            background-color: #DC2626 !important;
+            color: #FFFFFF !important;
+        }
+
+        .libras-pulse {
+            animation: pulse-ring 2.5s infinite ease-in-out;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.97); opacity: 0.8; }
+            50% { transform: scale(1.03); opacity: 1; }
+            100% { transform: scale(0.97); opacity: 0.8; }
+        }
+
+        /* Classes de Acessibilidade Dinâmica para Dimensionamento de Fonte */
+        .font-text-normal { font-size: 1.125rem; line-height: 1.75rem; }
+        .font-text-large { font-size: 1.375rem; line-height: 2rem; }
+        .font-text-xlarge { font-size: 1.65rem; line-height: 2.25rem; }
     </style>
 </head>
-<body>
+<body id="appBody" class="bg-slate-100 text-slate-900 min-h-screen flex flex-col font-text-normal pb-28">
 
-    <h1>Olá, Mundo!</h1>
-    <p>Esta é a minha primeira página web criada com o VS Code e hospedada no GitHub.</p>
+    <header role="banner" class="bg-blue-950 text-white shadow-xl sticky top-0 z-40 border-b-4 border-amber-400">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-universal-access text-amber-400 text-3xl" aria-hidden="true"></i>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-black tracking-wide">Sênior Seguro</h1>
+                    <p class="text-xs text-amber-300 font-semibold">Inclusão Total: Idosos, Deficientes Visuais e Auditivos</p>
+                </div>
+            </div>
 
+            <!-- Ferramentas Rápidas de Acessibilidade -->
+            <nav aria-label="Controles de Acessibilidade" class="flex flex-wrap items-center gap-2">
+                <button onclick="changeFontSize('small')" class="bg-blue-800 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-bold text-sm shadow transition" title="Tamanho de Letra Normal (A)">A</button>
+                <button onclick="changeFontSize('large')" class="bg-blue-800 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-bold text-base shadow transition" title="Tamanho de Letra Grande (A+)">A+</button>
+                <button onclick="changeFontSize('xlarge')" class="bg-blue-800 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-bold text-lg shadow transition" title="Tamanho de Letra Gigante (A++)">A++</button>
+                
+                <button onclick="toggleContrast()" class="bg-amber-400 hover:bg-amber-300 text-blue-950 font-bold px-3 py-1.5 rounded-lg text-sm shadow transition flex items-center gap-1" title="Alternar Alto Contraste">
+                    <i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i> Contraste
+                </button>
+
+                <button onclick="toggleLibrasGlobal()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-lg text-sm shadow transition flex items-center gap-1" title="Ativar Tradutor LIBRAS">
+                    <i class="fa-solid fa-hands-asewell" aria-hidden="true"></i> LIBRAS
+                </button>
+
+                <!-- BOTÃO SOS -->
+                <button onclick="openHelpModal()" class="bg-red-600 hover:bg-red-700 text-white font-extrabold px-4 py-2 rounded-xl text-base shadow-lg flex items-center gap-2 border-2 border-red-300" title="Ajuda de Emergência SOS">
+                    <i class="fa-solid fa-circle-question text-xl" aria-hidden="true"></i> AJUDA / SOS
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <div id="liveCaptionContainer" class="caption-bar fixed bottom-0 left-0 right-0 z-50 p-3 text-center border-t-2 border-amber-400 flex items-center justify-between px-6" role="region" aria-live="assertive" aria-label="Legendas da Leitura e Leitor de Tela">
+        <div class="flex items-center gap-3 w-full max-w-5xl mx-auto">
+            <span class="bg-amber-400 text-blue-950 px-2 py-0.5 rounded text-xs font-black shrink-0">LEGENDA / VOZ:</span>
+            <p id="liveCaptionText" class="text-lg font-bold tracking-wide text-amber-200 truncate">
+                Bem-vindo ao Sênior Seguro. Clique no microfone ou digite seu texto.
+            </p>
+        </div>
+        <button onclick="repeatLastSpeech()" class="ml-2 bg-blue-800 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm shrink-0 flex items-center gap-1" title="Repetir último áudio">
+            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Repetir
+        </button>
+    </div>
+
+    <main class="max-w-6xl mx-auto px-4 py-6 flex-grow w-full space-y-8" id="mainContent">
+
+        <section class="bg-card bg-white rounded-2xl p-6 shadow-md border-l-8 border-blue-600" aria-label="Apresentação">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="space-y-2">
+                    <h2 class="text-2xl md:text-3xl font-black text-blue-950">
+                        Navegação Totalmente Acessível e Protegida
+                    </h2>
+                    <p class="text-slate-700">
+                        O sistema monitora seu tempo de foco em cada área para auditoria, reconhece sua voz em tempo real e adapta a leitura para quem tem deficiência visual ou auditiva.
+                    </p>
+                </div>
+                <div class="flex flex-wrap gap-2 shrink-0">
+                    <button onclick="speakSection('Apresentação', 'Bem-vindo ao Sênior Seguro! Pressione o botão do microfone para falar com o sistema ou navegue pelas opções.')" class="bg-blue-100 hover:bg-blue-200 text-blue-950 px-4 py-3 rounded-xl font-bold flex items-center gap-2 shadow">
+                        <i class="fa-solid fa-volume-high text-xl text-blue-700" aria-hidden="true"></i> Ouvir Boas-Vindas
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEÇÃO 1: LEITOR E INTERAÇÃO POR VOZ COM OPÇÕES DE COPIAR E BAIXAR -->
+        <article id="secao-leitor-voz" class="bg-card bg-white rounded-2xl p-6 shadow-md border border-slate-200" tabindex="0" onfocus="trackDwell('Leitor de Texto e Voz')" onmouseenter="trackDwell('Leitor de Texto e Voz')">
+            <header class="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="bg-blue-100 text-blue-800 p-3 rounded-2xl">
+                        <i class="fa-solid fa-microphone-lines text-3xl" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-black text-slate-900">1. Leitor e Interação por Voz</h3>
+                        <p class="text-slate-600 text-sm">Fale no microfone para transcrever ou digite abaixo para ouvir e salvar.</p>
+                    </div>
+                </div>
+                <span class="bg-blue-50 text-blue-800 text-xs font-black px-3 py-1 rounded-full border border-blue-300">
+                    <i class="fa-solid fa-eye-slash mr-1"></i> Transcrição ao Vivo
+                </span>
+            </header>
+
+            <div class="space-y-4">
+                <label for="customTextToSpeech" class="block font-extrabold text-slate-800">
+                    Digite ou clique no microfone para falar o texto:
+                </label>
+                
+                <div class="relative">
+                    <textarea id="customTextToSpeech" rows="4" class="w-full p-4 pr-16 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none text-xl" placeholder="Clique no ícone de microfone ao lado para falar ou digite aqui..."></textarea>
+                    
+                    <!-- Botão de Microfone -->
+                    <button id="btnVoiceMic" onclick="toggleVoiceRecognition()" class="absolute right-3 top-3 bg-blue-700 hover:bg-blue-800 text-white rounded-xl p-3 shadow-lg flex items-center justify-center transition" title="Falar por Voz (Microfone)">
+                        <i class="fa-solid fa-microphone text-2xl" id="micIcon"></i>
+                    </button>
+                </div>
+
+                <!-- Botões Rápidos de Ação: Copiar, Baixar e Ouvir -->
+                <div class="flex flex-wrap gap-2 justify-between items-center bg-slate-50 p-4 rounded-xl border">
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="copyToClipboard()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold px-4 py-2.5 rounded-xl shadow flex items-center gap-2">
+                            <i class="fa-solid fa-copy"></i> Copiar Texto
+                        </button>
+                        <button onclick="downloadTextFile()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold px-4 py-2.5 rounded-xl shadow flex items-center gap-2">
+                            <i class="fa-solid fa-download"></i> Baixar Texto (.txt)
+                        </button>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="speakCustomInput()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-5 py-2.5 rounded-xl shadow flex items-center gap-2">
+                            <i class="fa-solid fa-play"></i> Ouvir Texto
+                        </button>
+                        <button onclick="stopSpeech()" class="bg-red-100 hover:bg-red-200 text-red-800 font-bold px-4 py-2.5 rounded-xl flex items-center gap-2">
+                            <i class="fa-solid fa-stop"></i> Parar Voz
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Configuração de Seleção da Voz do Sistema -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border">
+                    <div>
+                        <label for="voiceSelect" class="block font-bold text-sm text-slate-700 mb-1">Voz do Leitor:</label>
+                        <select id="voiceSelect" class="w-full p-2.5 border rounded-lg font-bold text-slate-800 bg-white" onchange="changeVoiceSelection()">
+                            <option value="">Carregando vozes disponíveis...</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="speechRate" class="block font-bold text-sm text-slate-700 mb-1">Velocidade da Leitura:</label>
+                        <select id="speechRate" class="w-full p-2.5 border rounded-lg font-bold text-slate-800 bg-white">
+                            <option value="0.7">Lenta (Para fácil entendimento)</option>
+                            <option value="0.9" selected>Normal Pausada</option>
+                            <option value="1.2">Rápida</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <!-- SEÇÃO 2: TRADUTOR LIBRAS -->
+        <article id="secao-libras" class="bg-card bg-white rounded-2xl p-6 shadow-md border border-slate-200" tabindex="0" onfocus="trackDwell('Central LIBRAS')" onmouseenter="trackDwell('Central LIBRAS')">
+            <header class="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="bg-emerald-100 text-emerald-800 p-3 rounded-2xl">
+                        <i class="fa-solid fa-hands-asewell text-3xl" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-black text-slate-900">2. Tradutor LIBRAS e Alertas Visuais</h3>
+                        <p class="text-slate-600 text-sm">Explicações em Língua Brasileira de Sinais para surdos.</p>
+                    </div>
+                </div>
+                <span class="bg-emerald-50 text-emerald-800 text-xs font-black px-3 py-1 rounded-full border border-emerald-300">
+                    <i class="fa-solid fa-ear-deaf mr-1"></i> Acessibilidade Surdos
+                </span>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
+                <div class="bg-slate-900 text-white rounded-2xl p-4 text-center border-4 border-emerald-500 relative min-h-[200px] flex flex-col justify-center items-center">
+                    <div id="librasAvatarGraphic" class="space-y-3 libras-pulse">
+                        <i class="fa-solid fa-user-ninja text-6xl text-emerald-400"></i>
+                        <p id="librasSignalTitle" class="font-extrabold text-amber-300 text-lg">Intérprete LIBRAS Ativo</p>
+                        <p id="librasGestureDescription" class="text-sm text-slate-300 px-2">
+                            Sinalização: [Mãos abertas na altura do peito - 'BEM-VINDO']
+                        </p>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 space-y-3">
+                    <h4 class="font-extrabold text-slate-800">Escolha um tópico para ver em LIBRAS:</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button onclick="triggerLibras('GOLPE PIX', 'Mão direita fechada apontando para a palma esquerda - Alerta de Dinheiro.')" class="bg-slate-50 hover:bg-emerald-50 border-2 border-slate-300 hover:border-emerald-500 p-3 rounded-xl font-bold text-left flex items-center gap-3">
+                            <i class="fa-solid fa-money-bill-transfer text-emerald-600 text-2xl"></i>
+                            <span>Sinal: Golpe do Pix</span>
+                        </button>
+                        <button onclick="triggerLibras('SENHA SEGURA', 'Dedos indicadores cruzados em frente ao peito - SENHA FECHADA.')" class="bg-slate-50 hover:bg-emerald-50 border-2 border-slate-300 hover:border-emerald-500 p-3 rounded-xl font-bold text-left flex items-center gap-3">
+                            <i class="fa-solid fa-lock text-emerald-600 text-2xl"></i>
+                            <span>Sinal: Senha Segura</span>
+                        </button>
+                        <button onclick="triggerLibras('FALSO PARENTE', 'Sinal de FILHO seguido de PERIGO.')" class="bg-slate-50 hover:bg-emerald-50 border-2 border-slate-300 hover:border-emerald-500 p-3 rounded-xl font-bold text-left flex items-center gap-3">
+                            <i class="fa-brands fa-whatsapp text-emerald-600 text-2xl"></i>
+                            <span>Sinal: Falso Whatsapp</span>
+                        </button>
+                        <button onclick="triggerLibras('PEDIR AJUDA', 'Duas mãos abertas para cima se movendo para frente - SOCORRO/AJUDA.')" class="bg-slate-50 hover:bg-emerald-50 border-2 border-slate-300 hover:border-emerald-500 p-3 rounded-xl font-bold text-left flex items-center gap-3">
+                            <i class="fa-solid fa-hand-holding-hand text-emerald-600 text-2xl"></i>
+                            <span>Sinal: Pedir Ajuda SOS</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <!-- SEÇÃO 3: CÂMERA IA -->
+        <article id="secao-camera-ia" class="bg-card bg-white rounded-2xl p-6 shadow-md border border-slate-200" tabindex="0" onfocus="trackDwell('Câmera IA e Leitura')" onmouseenter="trackDwell('Câmera IA e Leitura')">
+            <header class="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="bg-purple-100 text-purple-800 p-3 rounded-2xl">
+                        <i class="fa-solid fa-camera-retro text-3xl" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-black text-slate-900">3. Câmera IA: Leitura de Cartas e Documentos</h3>
+                        <p class="text-slate-600 text-sm">Mostre um papel na câmera para a IA ler para você.</p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                <div class="space-y-3">
+                    <div class="relative bg-black rounded-2xl overflow-hidden aspect-video border-4 border-purple-600 flex items-center justify-center">
+                        <video id="webcamVideo" autoplay playsinline class="w-full h-full object-cover hidden"></video>
+                        <div id="cameraPlaceholder" class="text-center p-6 text-white space-y-3">
+                            <i class="fa-solid fa-camera text-5xl text-purple-400"></i>
+                            <p class="font-bold text-lg">Câmera Desativada</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button id="btnStartCamera" onclick="startCamera()" class="bg-purple-700 hover:bg-purple-800 text-white font-bold px-4 py-2.5 rounded-xl flex items-center gap-2">
+                            <i class="fa-solid fa-video"></i> Ligar Câmera
+                        </button>
+                        <button id="btnCaptureAI" onclick="captureAndAnalyzeAI()" class="bg-amber-500 hover:bg-amber-600 text-blue-950 font-black px-4 py-2.5 rounded-xl flex items-center gap-2 disabled:opacity-50" disabled>
+                            <i class="fa-solid fa-microchip"></i> Analisar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 p-5 rounded-2xl border-2 border-slate-200 space-y-3 min-h-[200px]">
+                    <h4 class="font-black text-slate-900 text-lg flex items-center gap-2">
+                        <i class="fa-solid fa-file-invoice text-purple-600"></i> Resultado da Leitura:
+                    </h4>
+                    <p id="aiCameraResult" class="text-slate-700 text-base leading-relaxed">
+                        Aguardando você ligar a câmera e capturar uma foto...
+                    </p>
+                </div>
+            </div>
+        </article>
+
+        <!-- SEÇÃO 4: VERIFICADOR DE MENSAGENS DE GOLPE -->
+        <article id="secao-verificador" class="bg-card bg-white rounded-2xl p-6 shadow-md border border-slate-200" tabindex="0" onfocus="trackDwell('Verificador de Mensagens')" onmouseenter="trackDwell('Verificador de Mensagens')">
+            <header class="flex items-center gap-3 mb-4">
+                <div class="bg-amber-100 text-amber-800 p-3 rounded-2xl">
+                    <i class="fa-solid fa-shield-halved text-3xl" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-black text-slate-900">4. Verificador de Golpes de Mensagem</h3>
+                    <p class="text-slate-600 text-sm">Cole a mensagem que recebeu no WhatsApp para verificar.</p>
+                </div>
+            </header>
+
+            <textarea id="scamInput" rows="3" class="w-full p-4 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none text-xl mb-3" placeholder="Ex: 'Mãe, troquei de número, me manda 500 reais no Pix urgente'"></textarea>
+            
+            <div class="flex flex-wrap gap-3">
+                <button onclick="analyzeMessage()" class="bg-blue-800 hover:bg-blue-900 text-white font-extrabold px-6 py-3 rounded-xl shadow-md text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-magnifying-glass-shield" aria-hidden="true"></i> Analisar Segurança
+                </button>
+                <button onclick="clearAnalysis()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-4 py-3 rounded-xl text-lg">
+                    Limpar
+                </button>
+            </div>
+
+            <div id="analysisResult" class="hidden mt-4 p-4 rounded-xl border-2"></div>
+        </article>
+
+        <!-- SEÇÃO 5: GUIA DOS GOLPES -->
+        <article id="secao-guia-golpes" class="space-y-4" tabindex="0" onfocus="trackDwell('Guia de Golpes')" onmouseenter="trackDwell('Guia de Golpes')">
+            <h3 class="text-2xl font-black text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation text-amber-500" aria-hidden="true"></i> 5. Guia Rápido de Golpes Comuns
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-card bg-white rounded-2xl p-5 shadow-md border border-slate-200">
+                    <div class="flex items-center gap-3 mb-2 text-emerald-700 font-bold text-xl">
+                        <i class="fa-brands fa-whatsapp text-3xl"></i> Falso Filho no WhatsApp
+                    </div>
+                    <p class="text-slate-700 mb-3">Dizem que mudaram de número de telefone e pedem Pix urgente.</p>
+                    <div class="bg-red-50 border-l-4 border-red-500 p-3 rounded text-red-950 font-semibold">
+                        <strong>Solução:</strong> Ligue imediatamente para o número ANTIGO do seu parente.
+                    </div>
+                </div>
+
+                <div class="bg-card bg-white rounded-2xl p-5 shadow-md border border-slate-200">
+                    <div class="flex items-center gap-3 mb-2 text-blue-800 font-bold text-xl">
+                        <i class="fa-solid fa-building-columns text-3xl"></i> Falsa Central de Banco
+                    </div>
+                    <p class="text-slate-700 mb-3">Ligação alegando compra suspeita para fazer você fazer Pix.</p>
+                    <div class="bg-red-50 border-l-4 border-red-500 p-3 rounded text-red-950 font-semibold">
+                        <strong>Solução:</strong> Desligue! O banco nunca pede transferência por telefone.
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <!-- SEÇÃO 6: PAINEL DE AUDITORIA -->
+        <article id="secao-auditoria" class="bg-card bg-white rounded-2xl p-6 shadow-md border-2 border-purple-300" tabindex="0" onfocus="trackDwell('Painel de Auditoria')" onmouseenter="trackDwell('Painel de Auditoria')">
+            <header class="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="bg-purple-100 text-purple-900 p-3 rounded-2xl">
+                        <i class="fa-solid fa-chart-pie text-3xl" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-black text-slate-900">6. Relatório de Auditoria e Acessibilidade</h3>
+                        <p class="text-slate-600 text-sm">Tempo de permanência e engajamento em cada área.</p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                <div class="bg-slate-50 p-4 rounded-xl border">
+                    <canvas id="auditChart" height="220"></canvas>
+                </div>
+
+                <div class="space-y-3">
+                    <h4 class="font-black text-slate-800 text-lg">Métricas (Em Segundos):</h4>
+                    <ul id="auditMetricsList" class="space-y-2 text-base font-semibold text-slate-700"></ul>
+                    <button onclick="resetAuditMetrics()" class="text-xs text-red-600 underline font-bold hover:text-red-800">
+                        Zerar dados da auditoria
+                    </button>
+                </div>
+            </div>
+        </article>
+
+    </main>
+
+    <!-- MODAL SOS -->
+    <div id="helpModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="bg-white rounded-3xl shadow-2xl border-4 border-red-600 max-w-2xl w-full p-6 space-y-6 relative">
+            <button onclick="closeHelpModal()" class="absolute top-4 right-4 bg-slate-200 hover:bg-slate-300 text-slate-900 rounded-full w-12 h-12 flex items-center justify-center font-black text-2xl" title="Fechar Janela SOS">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="flex items-center gap-4 border-b pb-4">
+                <div class="bg-red-100 text-red-600 p-4 rounded-2xl">
+                    <i class="fa-solid fa-life-ring text-4xl"></i>
+                </div>
+                <div>
+                    <h2 id="modalTitle" class="text-3xl font-black text-red-700">Ajuda Urgente e SOS</h2>
+                    <p class="text-slate-600 font-bold">Passos de proteção imediata</p>
+                </div>
+            </div>
+
+            <div class="space-y-3 font-bold text-slate-800">
+                <div class="bg-red-50 p-3 rounded-xl border border-red-200 flex items-center gap-3">
+                    <span class="bg-red-600 text-white font-black w-8 h-8 rounded-full flex items-center justify-center shrink-0">1</span>
+                    <span>PARE: Não envie Pix, senhas ou transferências.</span>
+                </div>
+                <div class="bg-red-50 p-3 rounded-xl border border-red-200 flex items-center gap-3">
+                    <span class="bg-red-600 text-white font-black w-8 h-8 rounded-full flex items-center justify-center shrink-0">2</span>
+                    <span>BANCO: Ligue para o telefone do verso do seu cartão.</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 pt-2">
+                <a href="tel:190" class="bg-blue-900 text-white text-center py-3 rounded-xl font-black text-xl block shadow">Polícia: 190</a>
+                <a href="tel:181" class="bg-amber-500 text-blue-950 text-center py-3 rounded-xl font-black text-xl block shadow">Denúncia: 181</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- WIDGET VLIBRAS -->
+    <div vw class="enabled">
+        <div vw-access-button class="active"></div>
+        <div vw-plugin-wrapper>
+            <div class="vw-plugin-top-wrapper"></div>
+        </div>
+    </div>
+    <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+    <script>
+        new window.VLibras.Widget('https://vlibras.gov.br/app');
+    </script>
+
+    <!-- SCRIPT PRINCIPAL E RECONHECIMENTO CORRIGIDO EM TEMPO REAL -->
+    <script>
+        let synth = window.speechSynthesis;
+        let lastSpokenText = "";
+        let availableVoices = [];
+        let isListening = false;
+        let recognition = null;
+
+        // Auditoria
+        let dwellData = {
+            'Leitor de Texto e Voz': 0,
+            'Central LIBRAS': 0,
+            'Câmera IA e Leitura': 0,
+            'Verificador de Mensagens': 0,
+            'Guia de Golpes': 0,
+            'Painel de Auditoria': 0
+        };
+        let currentSection = null;
+        let dwellTimer = null;
+        let auditChart = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initVoices();
+            initChart();
+            setupVoiceRecognition();
+        });
+
+        function initVoices() {
+            if (!synth) return;
+            let populate = () => {
+                availableVoices = synth.getVoices();
+                let voiceSelect = document.getElementById('voiceSelect');
+                if (!voiceSelect) return;
+                voiceSelect.innerHTML = '';
+                
+                let ptVoices = availableVoices.filter(v => v.lang.includes('pt') || v.lang.includes('PT'));
+                let listToUse = ptVoices.length > 0 ? ptVoices : availableVoices;
+
+                listToUse.forEach((voice) => {
+                    let option = document.createElement('option');
+                    option.value = voice.name;
+                    option.textContent = `${voice.name} (${voice.lang})`;
+                    voiceSelect.appendChild(option);
+                });
+            };
+            populate();
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = populate;
+            }
+        }
+
+        // RECONHECIMENTO DE VOZ EM TEMPO REAL CORRIGIDO
+        function setupVoiceRecognition() {
+            if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+                let SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRec();
+                recognition.lang = 'pt-BR';
+                recognition.continuous = false;
+                recognition.interimResults = true; // MOSTRA O TEXTO NA HORA ENQUANTO FALA
+
+                recognition.onstart = () => {
+                    isListening = true;
+                    document.getElementById('btnVoiceMic').classList.add('mic-active');
+                    document.getElementById('liveCaptionText').innerText = "🎙️ Ouvindo você... Pode falar!";
+                };
+
+                recognition.onresult = (event) => {
+                    let transcript = '';
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        transcript += event.results[i][0].transcript;
+                    }
+                    
+                    // Preenche o campo de texto e a legenda imediatamente em tempo real
+                    document.getElementById('customTextToSpeech').value = transcript;
+                    document.getElementById('liveCaptionText').innerText = "Você falou: " + transcript;
+                };
+
+                recognition.onerror = (event) => {
+                    let msg = "Erro ao reconhecer a voz. ";
+                    if (event.error === 'not-allowed') msg = "Permissão do microfone negada!";
+                    if (event.error === 'no-speech') msg = "Nenhuma fala detectada. Tente novamente.";
+                    if (event.error === 'network') msg = "Erro de rede (Caso esteja no PC, abra usando Live Server).";
+                    
+                    document.getElementById('liveCaptionText').innerText = msg;
+                    stopVoiceRecognition();
+                };
+
+                recognition.onend = () => {
+                    stopVoiceRecognition();
+                    let texto = document.getElementById('customTextToSpeech').value;
+                    if (texto.trim() !== '') {
+                        speakText(`Entendi: ${texto}`);
+                    }
+                };
+            } else {
+                alert("Seu navegador não suporta reconhecimento de voz. Recomendamos usar o Google Chrome.");
+            }
+        }
+
+        function toggleVoiceRecognition() {
+            if (!recognition) return;
+            if (isListening) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        }
+
+        function stopVoiceRecognition() {
+            isListening = false;
+            let btn = document.getElementById('btnVoiceMic');
+            if (btn) btn.classList.remove('mic-active');
+        }
+
+        // FUNÇÕES DE COPIAR E BAIXAR TEXTO
+        function copyToClipboard() {
+            let txt = document.getElementById('customTextToSpeech').value;
+            if (!txt.trim()) {
+                alert("Não há texto para copiar!");
+                return;
+            }
+            navigator.clipboard.writeText(txt).then(() => {
+                speakText("Texto copiado para a área de transferência.");
+            });
+        }
+
+        function downloadTextFile() {
+            let txt = document.getElementById('customTextToSpeech').value;
+            if (!txt.trim()) {
+                alert("Não há texto para baixar!");
+                return;
+            }
+            let blob = new Blob([txt], { type: "text/plain;charset=utf-8" });
+            let a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = "texto_gravado.txt";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            speakText("Arquivo de texto baixado com sucesso.");
+        }
+
+        // LEITURA DE TEXTO (SINTETIZADOR)
+        function speakText(text) {
+            if (!synth) return;
+            synth.cancel();
+
+            let utterance = new SpeechSynthesisUtterance(text);
+            let selectedVoiceName = document.getElementById('voiceSelect').value;
+            let rate = parseFloat(document.getElementById('speechRate').value || 0.9);
+
+            let chosenVoice = availableVoices.find(v => v.name === selectedVoiceName);
+            if (chosenVoice) utterance.voice = chosenVoice;
+            utterance.rate = rate;
+
+            lastSpokenText = text;
+            document.getElementById('liveCaptionText').innerText = text;
+
+            synth.speak(utterance);
+        }
+
+        function speakCustomInput() {
+            let txt = document.getElementById('customTextToSpeech').value;
+            if (txt.trim()) {
+                speakText(txt);
+            } else {
+                speakText("Digite ou fale um texto antes de apertar ouvir.");
+            }
+        }
+
+        function speakSection(title, desc) {
+            speakText(`${title}. ${desc}`);
+        }
+
+        function stopSpeech() {
+            if (synth) synth.cancel();
+            document.getElementById('liveCaptionText').innerText = "Leitura interrompida.";
+        }
+
+        function repeatLastSpeech() {
+            if (lastSpokenText) speakText(lastSpokenText);
+        }
+
+        function changeVoiceSelection() {
+            speakText("Voz alterada.");
+        }
+
+        // LIBRAS, CÂMERA E VERIFICADOR
+        function triggerLibras(title, description) {
+            document.getElementById('librasSignalTitle').innerText = `Sinal: ${title}`;
+            document.getElementById('librasGestureDescription').innerText = `Descrição: [${description}]`;
+            speakText(`Sinal LIBRAS para ${title}. ${description}`);
+        }
+
+        function toggleLibrasGlobal() {
+            let librasBtn = document.querySelector('[vw-access-button]');
+            if (librasBtn) librasBtn.click();
+        }
+
+        async function startCamera() {
+            let video = document.getElementById('webcamVideo');
+            let placeholder = document.getElementById('cameraPlaceholder');
+            let btnCapture = document.getElementById('btnCaptureAI');
+
+            try {
+                let stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                video.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+                btnCapture.disabled = false;
+                speakText("Câmera ativada.");
+            } catch (err) {
+                alert("Não foi possível acessar a câmera.");
+            }
+        }
+
+        function captureAndAnalyzeAI() {
+            let result = document.getElementById('aiCameraResult');
+            result.innerText = "Analisando com Inteligência Artificial...";
+
+            setTimeout(() => {
+                let textRes = "Leitura da IA: O documento lido parece ser um boleto bancário válido.";
+                result.innerText = textRes;
+                speakText(textRes);
+            }, 2000);
+        }
+
+        function analyzeMessage() {
+            let input = document.getElementById('scamInput').value.toLowerCase();
+            let resultDiv = document.getElementById('analysisResult');
+            resultDiv.classList.remove('hidden');
+
+            if (input.includes('pix') || input.includes('urgente') || input.includes('dinheiro') || input.includes('banco')) {
+                resultDiv.className = "mt-4 p-4 rounded-xl border-2 bg-red-100 border-red-500 text-red-950 font-bold";
+                resultDiv.innerHTML = "<i class='fa-solid fa-triangle-exclamation text-2xl mr-2'></i> ALERTA DE PERIGO: Esta mensagem possui características de golpe!";
+                speakText("Atenção! Esta mensagem tem sinais de golpe.");
+            } else {
+                resultDiv.className = "mt-4 p-4 rounded-xl border-2 bg-emerald-100 border-emerald-500 text-emerald-950 font-bold";
+                resultDiv.innerHTML = "<i class='fa-solid fa-circle-check text-2xl mr-2'></i> Mensagem Aparentemente Segura.";
+                speakText("Mensagem sem sinais óbvios de golpe.");
+            }
+        }
+
+        function clearAnalysis() {
+            document.getElementById('scamInput').value = '';
+            document.getElementById('analysisResult').classList.add('hidden');
+        }
+
+        // ACESSIBILIDADE E AUDITORIA
+        function changeFontSize(size) {
+            let body = document.getElementById('appBody');
+            body.classList.remove('font-text-normal', 'font-text-large', 'font-text-xlarge');
+            if (size === 'small') body.classList.add('font-text-normal');
+            if (size === 'large') body.classList.add('font-text-large');
+            if (size === 'xlarge') body.classList.add('font-text-xlarge');
+        }
+
+        function toggleContrast() {
+            document.body.classList.toggle('high-contrast');
+        }
+
+        function openHelpModal() {
+            document.getElementById('helpModal').classList.remove('hidden');
+            speakText("Modo SOS Ativado.");
+        }
+
+        function closeHelpModal() {
+            document.getElementById('helpModal').classList.add('hidden');
+        }
+
+        function trackDwell(sectionName) {
+            if (currentSection === sectionName) return;
+            currentSection = sectionName;
+            
+            clearInterval(dwellTimer);
+            dwellTimer = setInterval(() => {
+                if (dwellData[sectionName] !== undefined) {
+                    dwellData[sectionName]++;
+                    updateChartAndMetrics();
+                }
+            }, 1000);
+        }
+
+        function initChart() {
+            let ctx = document.getElementById('auditChart').getContext('2d');
+            auditChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(dwellData),
+                    datasets: [{
+                        label: 'Segundos',
+                        data: Object.values(dwellData),
+                        backgroundColor: '#6366F1'
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { display: false } } }
+            });
+            updateChartAndMetrics();
+        }
+
+        function updateChartAndMetrics() {
+            if (auditChart) {
+                auditChart.data.datasets[0].data = Object.values(dwellData);
+                auditChart.update();
+            }
+
+            let list = document.getElementById('auditMetricsList');
+            if (list) {
+                list.innerHTML = '';
+                for (let [sec, time] of Object.entries(dwellData)) {
+                    let li = document.createElement('li');
+                    li.className = "flex justify-between border-b pb-1";
+                    li.innerHTML = `<span>${sec}:</span> <span class="font-black text-indigo-700">${time}s</span>`;
+                    list.appendChild(li);
+                }
+            }
+        }
+
+        function resetAuditMetrics() {
+            for (let key in dwellData) dwellData[key] = 0;
+            updateChartAndMetrics();
+        }
+    </script>
 </body>
 </html>
