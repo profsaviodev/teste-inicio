@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intérprete VLibras Móvel</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 16px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        header h1 {
+            font-size: 1.25rem;
+            color: #1a73e8;
+        }
+
+        .container-principal {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Caixa onde aparece o texto falado */
+        .caixa-transcricao {
+            flex: 1;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 16px;
+            overflow-y: auto;
+            font-size: 1.1rem;
+            line-height: 1.5;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        .placeholder-texto {
+            color: #999;
+            font-style: italic;
+        }
+
+        /* Botão de Gravação (Microfone) */
+        .painel-controle {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #btn-ouvir {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            width: 70px;
+            height: 70px;
+            font-size: 1.8rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(26, 115, 232, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        #btn-ouvir.ouvindo {
+            background-color: #ea4335;
+            animation: pulse 1.5s infinite;
+            box-shadow: 0 4px 10px rgba(234, 67, 53, 0.4);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .status-texto {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Intérprete para Deficiente Auditivo</h1>
+    </header>
+
+    <div class="container-principal">
+        <!-- Caixa de Texto Transcrita -->
+        <div class="caixa-transcricao" id="caixa-texto">
+            <span class="placeholder-texto">Toque no microfone abaixo e comece a falar para transcrever e traduzir em tempo real...</span>
+        </div>
+
+        <!-- Botão de Ação do Microfone -->
+        <div class="painel-controle">
+            <button id="btn-ouvir" title="Ouvir fala">🎤</button>
+            <span class="status-texto" id="status-ouvindo">Toque para iniciar</span>
+        </div>
+    </div>
+
+    <!-- Estrutura nativa oficial do VLibras -->
+    <div vw class="enabled">
+        <div vw-access-button class="active"></div>
+        <div vw-plugin-wrapper>
+            <div class="vw-plugin-top-wrapper"></div>
+        </div>
+    </div>
+
+    <!-- Scripts Oficiais e Lógica -->
+    <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+    <script>
+        // Inicializa o widget do VLibras
+        new window.VLibras.Widget('https://vlibras.gov.br/app');
+
+        const btnOuvir = document.getElementById('btn-ouvir');
+        const statusOuvindo = document.getElementById('status-ouvindo');
+        const caixaTexto = document.getElementById('caixa-texto');
+
+        // Configuração da API de Reconhecimento de Fala nativa do navegador (SpeechRecognition)
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        
+        if (!SpeechRecognition) {
+            alert("Seu navegador não suporta reconhecimento de voz. Tente usar o Google Chrome no celular.");
+        } else {
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'pt-BR';
+            recognition.continuous = true;
+            recognition.interimResults = true;
+
+            let gravando = false;
+
+            btnOuvir.addEventListener('click', () => {
+                if (!gravando) {
+                    recognition.start();
+                } else {
+                    recognition.stop();
+                }
+            });
+
+            recognition.onstart = () => {
+                gravando = true;
+                btnOuvir.classList.add('ouvindo');
+                statusOuvindo.textContent = "Ouvindo... Fale agora";
+                caixaTexto.innerHTML = ""; // Limpa a caixa ao iniciar nova escuta
+            };
+
+            recognition.onresult = (event) => {
+                let transcricaoInterina = '';
+                let transcricaoFinal = '';
+
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const texto = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        transcricaoFinal += texto + ' ';
+                    } else {
+                        transcricaoInterina += texto;
+                    }
+                }
+
+                // Exibe o texto na caixa do celular
+                const textoCompleto = transcricaoFinal || transcricaoInterina;
+                if (textoCompleto) {
+                    caixaTexto.innerHTML = `<p>${textoCompleto}</p>`;
+                    caixaTexto.scrollTop = caixaTexto.scrollHeight;
+
+                    // Envia automaticamente para o campo de texto oculto/gerenciado do VLibras traduzir
+                    enviarParaVLibras(textoCompleto);
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Erro no reconhecimento de voz:", event.error);
+                statusOuvindo.textContent = "Erro ao ouvir. Tente novamente.";
+            };
+
+            recognition.onend = () => {
+                gravando = false;
+                btnOuvir.classList.remove('ouvindo');
+                statusOuvindo.textContent = "Toque para iniciar";
+            };
+        }
+
+        // Função que injeta o texto reconhecido no input interno do plugin do VLibras
+        function enviarParaVLibras(texto) {
+            const inputVLibras = document.querySelector('.vpw-text-input') || document.querySelector('textarea');
+            if (inputVLibras) {
+                inputVLibras.value = texto;
+                inputVLibras.dispatchEvent(new Event('input', { bubbles: true }));
+
+                const botaoTraduzir = document.querySelector('.vpw-translate-button') || document.querySelector('button[type="submit"]');
+                if (botaoTraduzir) {
+                    botaoTraduzir.click();
+                }
+            }
+        }
+    </script>
+</body>
+</html>
