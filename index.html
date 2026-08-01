@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Intérprete e Gravador de Aulas - VLibras</title>
+    <title>Intérprete & Gravador de Aulas - VLibras</title>
     <style>
         * {
             box-sizing: border-box;
@@ -41,7 +41,6 @@
             margin: 0 auto;
         }
 
-        /* Formulário de Identificação da Aula */
         .painel-dados {
             background: #fff;
             padding: 12px;
@@ -60,7 +59,6 @@
             width: 100%;
         }
 
-        /* Caixa onde aparece o texto falado */
         .caixa-transcricao {
             height: 150px;
             background: #fff;
@@ -78,19 +76,19 @@
             font-style: italic;
         }
 
-        /* Painel de Controle e Botões */
         .painel-controle {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .btn {
-            padding: 10px 18px;
+            padding: 10px 14px;
             border: none;
             border-radius: 8px;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-weight: bold;
             cursor: pointer;
             color: white;
@@ -104,6 +102,7 @@
         #btn-parar { background-color: #6c757d; display: none; }
         #btn-copiar { background-color: #17a2b8; }
         #btn-salvar { background-color: #ffc107; color: #333; }
+        #btn-abrir-arquivo { background-color: #6610f2; }
 
         @keyframes pulse {
             0% { transform: scale(1); }
@@ -117,13 +116,12 @@
             color: #666;
         }
 
-        /* Histórico de Aulas Salvas */
         .painel-historico {
             background: #fff;
             border: 1px solid #ddd;
             border-radius: 10px;
             padding: 12px;
-            max-height: 200px;
+            max-height: 180px;
             overflow-y: auto;
         }
 
@@ -150,6 +148,11 @@
             font-size: 0.85rem;
         }
 
+        .item-aula .acoes-item {
+            display: flex;
+            gap: 4px;
+        }
+
         .item-aula button {
             background: #1a73e8;
             color: white;
@@ -157,6 +160,7 @@
             padding: 4px 8px;
             border-radius: 4px;
             cursor: pointer;
+            font-size: 0.75rem;
         }
     </style>
 </head>
@@ -167,27 +171,26 @@
     </header>
 
     <div class="container-principal">
-        <!-- Identificação da Turma e Disciplina -->
         <div class="painel-dados">
             <input type="text" id="input-turma" placeholder="Nome da Turma (Ex: 3º Ano A)">
             <input type="text" id="input-disciplina" placeholder="Disciplina (Ex: Matemática)">
         </div>
 
-        <!-- Caixa de Transcrição em Tempo Real -->
         <div class="caixa-transcricao" id="caixa-texto">
-            <span class="placeholder-texto">Clique em "Gravar" (ou diga "OK") para começar a transcrição da aula em tempo real...</span>
+            <span class="placeholder-texto">Clique em "Gravar" ou diga "OK" para iniciar...</span>
         </div>
 
-        <!-- Botões de Controle -->
         <div class="painel-controle">
             <button class="btn" id="btn-gravar">🔴 Gravar</button>
             <button class="btn" id="btn-parar">⏹️ Parar</button>
             <button class="btn" id="btn-copiar">📋 Copiar</button>
-            <button class="btn" id="btn-salvar">💾 Salvar Aula</button>
+            <button class="btn" id="btn-salvar">💾 Salvar Arquivo</button>
+            <label class="btn" id="btn-abrir-arquivo" style="cursor: pointer;">
+                📂 Abrir <input type="file" id="input-arquivo-local" accept=".txt" style="display: none;">
+            </label>
         </div>
         <div class="status-texto" id="status-ouvindo">Aguardando comando...</div>
 
-        <!-- Histórico de Gravações Salvas -->
         <div class="painel-historico">
             <h3>Histórico de Aulas Salvas</h3>
             <ul class="lista-aulas" id="lista-aulas">
@@ -196,7 +199,7 @@
         </div>
     </div>
 
-    <!-- Estrutura nativa do VLibras -->
+    <!-- Estrutura oficial do VLibras -->
     <div vw class="enabled">
         <div vw-access-button class="active"></div>
         <div vw-plugin-wrapper>
@@ -204,7 +207,6 @@
         </div>
     </div>
 
-    <!-- Script Oficial e Lógica -->
     <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
     <script>
         // Inicializa o widget do VLibras
@@ -214,6 +216,7 @@
         const btnParar = document.getElementById('btn-parar');
         const btnCopiar = document.getElementById('btn-copiar');
         const btnSalvar = document.getElementById('btn-salvar');
+        const inputArquivoLocal = document.getElementById('input-arquivo-local');
         const statusOuvindo = document.getElementById('status-ouvindo');
         const caixaTexto = document.getElementById('caixa-texto');
         const inputTurma = document.getElementById('input-turma');
@@ -223,6 +226,8 @@
         let textoAcumulado = "";
         let recognition = null;
         let gravando = false;
+        let threadTraducaoAtiva = null;
+        let ultimoTextoEnviadoVLibras = "";
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -239,7 +244,10 @@
                 btnGravar.classList.add('gravando');
                 btnGravar.textContent = "Gravando...";
                 btnParar.style.display = "inline-block";
-                statusOuvindo.textContent = "Ouvindo e traduzindo em tempo real... (Diga 'OK pare' para encerrar)";
+                statusOuvindo.textContent = "Ouvindo e traduzindo em segundo plano... (Diga 'OK pare' para encerrar)";
+                
+                // Inicia a thread de leitura automática contínua para o VLibras
+                iniciarThreadTraducao();
             };
 
             recognition.onresult = (event) => {
@@ -249,20 +257,14 @@
                 }
 
                 let textoMinusculo = transcricaoAtual.toLowerCase();
-
-                // Comando por voz para parar: "ok pare" ou "pare"
                 if (textoMinusculo.includes("ok pare") || textoMinusculo.includes("pare")) {
                     pararGravacao();
                     return;
                 }
 
-                // Acumula o texto da aula
                 let textoFinalExibicao = textoAcumulado + " " + transcricaoAtual;
                 caixaTexto.innerHTML = `<p>${textoFinalExibicao}</p>`;
                 caixaTexto.scrollTop = caixaTexto.scrollHeight;
-
-                // Envia para o VLibras traduzir o trecho atual
-                enviarParaVLibras(transcricaoAtual);
             };
 
             recognition.onerror = (event) => {
@@ -271,86 +273,126 @@
 
             recognition.onend = () => {
                 if (gravando) {
-                    // Mantém a escuta ativa caso ocorra pausas longas
                     try { recognition.start(); } catch(e) {}
                 }
             };
+        }
+
+        // Thread em segundo plano que envia o texto automaticamente para o VLibras processar sem cliques
+        function iniciarThreadTraducao() {
+            if (threadTraducaoAtiva) clearInterval(threadTraducaoAtiva);
+            
+            threadTraducaoAtiva = setInterval(() => {
+                if (!gravando) {
+                    clearInterval(threadTraducaoAtiva);
+                    return;
+                }
+                const textoAtual = caixaTexto.innerText.trim();
+                // Envia apenas se houver novo conteúdo gerado
+                if (textoAtual && textoAtual !== ultimoTextoEnviadoVLibras && !textoAtual.includes("Clique em")) {
+                    ultimoTextoEnviadoVLibras = textoAtual;
+                    enviarParaVLibrasEmSegundoPlano(textoAtual);
+                }
+            }, 1500); // Verifica a cada 1.5 segundos em segundo plano
         }
 
         function iniciarGravacao() {
             if (!recognition) return;
             try {
                 recognition.start();
-            } catch(e) {
-                console.log("Reconhecimento já iniciado");
-            }
+            } catch(e) {}
         }
 
         function pararGravacao() {
             if (!recognition) return;
             gravando = false;
             try { recognition.stop(); } catch(e) {}
+            if (threadTraducaoAtiva) clearInterval(threadTraducaoAtiva);
             
-            // Adiciona o texto interino definitivo ao acumulado geral
             textoAcumulado = caixaTexto.innerText;
-            
             btnGravar.classList.remove('gravando');
             btnGravar.textContent = "🔴 Gravar";
             btnParar.style.display = "none";
             statusOuvindo.textContent = "Gravação pausada.";
         }
 
-        // Eventos dos botões principais
         btnGravar.addEventListener('click', () => {
-            if (!gravando) {
-                iniciarGravacao();
-            }
+            if (!gravando) iniciarGravacao();
         });
 
         btnParar.addEventListener('click', () => {
             pararGravacao();
         });
 
-        // Copiar texto para a área de transferência
         btnCopiar.addEventListener('click', () => {
-            const textoParaCopiar = caixaTexto.innerText;
-            navigator.clipboard.writeText(textoParaCopiar).then(() => {
-                alert("Texto copiado para a área de transferência!");
+            navigator.clipboard.writeText(caixaTexto.innerText).then(() => {
+                alert("Texto copiado!");
             });
         });
 
-        // Salvar Aula no Histórico Local
+        // Salvar Arquivo (Gera um arquivo .txt físico e salva no histórico)
         btnSalvar.addEventListener('click', () => {
-            const turma = inputTurma.value.trim() || "Turma Geral";
-            const disciplina = inputDisciplina.value.trim() || "Disciplina Geral";
+            const turma = inputTurma.value.trim() || "Turma_Geral";
+            const disciplina = inputDisciplina.value.trim() || "Disciplina_Geral";
             const conteudo = caixaTexto.innerText.trim();
 
-            if (!conteudo || conteudo.includes("começar a transcrição")) {
-                alert("Não há conteúdo gravado para salvar.");
+            if (!conteudo || conteudo.includes("Clique em")) {
+                alert("Não há conteúdo para salvar.");
                 return;
             }
 
             const agora = new Date();
-            const dataHora = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            const dataStr = agora.toLocaleDateString('pt-BR').replace(/\//g, '-');
+            const horaStr = agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}).replace(/:/g, 'h');
             
-            // Formato do nome exigido: Data e Hora - Turma - Disciplina
-            const nomeRegistro = `${dataHora} - ${turma} - ${disciplina}`;
+            // Formato do nome do arquivo: Data e Hora - Turma - Disciplina
+            const nomeBaseArquivo = `${dataStr}_${horaStr} - ${turma} - ${disciplina}`;
 
+            // 1. Baixar o arquivo .txt fisicamente para o dispositivo
+            const blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${nomeBaseArquivo}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            // 2. Salvar no histórico local do app
             const aulaSalva = {
                 id: Date.now(),
-                nome: nomeRegistro,
+                nome: `${dataStr} ${horaStr} - ${turma} - ${disciplina}`,
                 conteudo: conteudo
             };
 
             let historico = JSON.parse(localStorage.getItem('historico_aulas') || '[]');
-            historico.unshift(aulaSalva); // Adiciona no topo
+            historico.unshift(aulaSalva);
             localStorage.setItem('historico_aulas', JSON.stringify(historico));
 
             carregarHistorico();
-            alert("Aula salva com sucesso no histórico!");
+            alert("Arquivo salvo e baixado com sucesso!");
         });
 
-        // Carrega o histórico salvo na tela
+        // Abrir Arquivo de texto local (.txt) salvo anteriormente
+        inputArquivoLocal.addEventListener('change', (event) => {
+            const arquivo = event.target.files[0];
+            if (!arquivo) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const textoLido = e.target.result;
+                caixaTexto.innerHTML = `<p>${textoLido}</p>`;
+                textoAcumulado = textoLido;
+                
+                // Dispara a leitura automática no VLibras do arquivo aberto
+                enviarParaVLibrasEmSegundoPlano(textoLido);
+                alert("Arquivo carregado com sucesso!");
+            };
+            reader.readAsText(arquivo);
+            inputArquivoLocal.value = ""; // Reseta o input
+        });
+
         function carregarHistorico() {
             const historico = JSON.parse(localStorage.getItem('historico_aulas') || '[]');
             listaAulas.innerHTML = "";
@@ -365,28 +407,27 @@
                 li.className = 'item-aula';
                 li.innerHTML = `
                     <span>📚 <strong>${aula.nome}</strong></span>
-                    <button onclick="abrirAula(${aula.id})">Abrir</button>
+                    <div class="acoes-item">
+                        <button onclick="abrirHistorico(${aula.id})">Abrir</button>
+                    </div>
                 `;
                 listaAulas.appendChild(li);
             });
         }
 
-        // Abre uma aula salva para leitura e tradução via VLibras
-        window.abrirAula = function(id) {
+        window.abrirHistorico = function(id) {
             const historico = JSON.parse(localStorage.getItem('historico_aulas') || '[]');
             const aula = historico.find(a => a.id === id);
             if (aula) {
                 caixaTexto.innerHTML = `<p>${aula.conteudo}</p>`;
                 textoAcumulado = aula.conteudo;
-                
-                // Envia o conteúdo salvo para o VLibras traduzir de uma vez
-                enviarParaVLibras(aula.conteudo);
+                enviarParaVLibrasEmSegundoPlano(aula.conteudo);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         };
 
-        // Envia o texto para o input interno do plugin oficial do VLibras
-        function enviarParaVLibras(texto) {
+        // Injeta e força a leitura no VLibras de forma totalmente automatizada em segundo plano
+        function enviarParaVLibrasEmSegundoPlano(texto) {
             const inputVLibras = document.querySelector('.vpw-text-input') || document.querySelector('textarea');
             if (inputVLibras) {
                 inputVLibras.value = texto;
@@ -399,7 +440,6 @@
             }
         }
 
-        // Carrega o histórico ao abrir a página
         carregarHistorico();
     </script>
 </body>
