@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Intérprete VLibras Móvel</title>
+    <title>Intérprete e Gravador de Aulas - VLibras</title>
     <style>
         * {
             box-sizing: border-box;
@@ -13,21 +13,21 @@
         }
 
         body {
-            background-color: #f0f2f5;
+            background-color: #f8f9fa;
             color: #333;
             display: flex;
             flex-direction: column;
-            height: 100vh;
-            padding: 16px;
+            min-height: 100vh;
+            padding: 12px;
         }
 
         header {
             text-align: center;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
 
         header h1 {
-            font-size: 1.25rem;
+            font-size: 1.2rem;
             color: #1a73e8;
         }
 
@@ -35,26 +35,42 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 16px;
-            max-width: 600px;
+            gap: 12px;
+            max-width: 650px;
             width: 100%;
             margin: 0 auto;
         }
 
+        /* Formulário de Identificação da Aula */
+        .painel-dados {
+            background: #fff;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .painel-dados input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+
         /* Caixa onde aparece o texto falado */
         .caixa-transcricao {
-            flex: 1;
+            height: 150px;
             background: #fff;
             border: 1px solid #ddd;
-            border-radius: 12px;
-            padding: 16px;
+            border-radius: 10px;
+            padding: 12px;
             overflow-y: auto;
-            font-size: 1.1rem;
-            line-height: 1.5;
+            font-size: 1rem;
+            line-height: 1.4;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
         }
 
         .placeholder-texto {
@@ -62,69 +78,125 @@
             font-style: italic;
         }
 
-        /* Botão de Gravação (Microfone) */
+        /* Painel de Controle e Botões */
         .painel-controle {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-        }
-
-        #btn-ouvir {
-            background-color: #1a73e8;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            width: 70px;
-            height: 70px;
-            font-size: 1.8rem;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(26, 115, 232, 0.3);
-            display: flex;
-            align-items: center;
             justify-content: center;
-            transition: all 0.2s ease;
+            align-items: center;
+            gap: 12px;
         }
 
-        #btn-ouvir.ouvindo {
-            background-color: #ea4335;
-            animation: pulse 1.5s infinite;
-            box-shadow: 0 4px 10px rgba(234, 67, 53, 0.4);
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            transition: opacity 0.2s;
         }
+
+        .btn:hover { opacity: 0.9; }
+
+        #btn-gravar { background-color: #28a745; }
+        #btn-gravar.gravando { background-color: #dc3545; animation: pulse 1.5s infinite; }
+        #btn-parar { background-color: #6c757d; display: none; }
+        #btn-copiar { background-color: #17a2b8; }
+        #btn-salvar { background-color: #ffc107; color: #333; }
 
         @keyframes pulse {
             0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+            50% { transform: scale(1.03); }
             100% { transform: scale(1); }
         }
 
         .status-texto {
-            font-size: 0.9rem;
+            text-align: center;
+            font-size: 0.85rem;
             color: #666;
-            font-weight: 500;
+        }
+
+        /* Histórico de Aulas Salvas */
+        .painel-historico {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .painel-historico h3 {
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            color: #444;
+        }
+
+        .lista-aulas {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .item-aula {
+            background: #f1f3f4;
+            padding: 8px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+
+        .item-aula button {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Intérprete para Deficiente Auditivo</h1>
+        <h1>Intérprete & Gravador de Aulas - VLibras</h1>
     </header>
 
     <div class="container-principal">
-        <!-- Caixa de Texto Transcrita -->
-        <div class="caixa-transcricao" id="caixa-texto">
-            <span class="placeholder-texto">Toque no microfone abaixo e comece a falar para transcrever e traduzir em tempo real...</span>
+        <!-- Identificação da Turma e Disciplina -->
+        <div class="painel-dados">
+            <input type="text" id="input-turma" placeholder="Nome da Turma (Ex: 3º Ano A)">
+            <input type="text" id="input-disciplina" placeholder="Disciplina (Ex: Matemática)">
         </div>
 
-        <!-- Botão de Ação do Microfone -->
+        <!-- Caixa de Transcrição em Tempo Real -->
+        <div class="caixa-transcricao" id="caixa-texto">
+            <span class="placeholder-texto">Clique em "Gravar" (ou diga "OK") para começar a transcrição da aula em tempo real...</span>
+        </div>
+
+        <!-- Botões de Controle -->
         <div class="painel-controle">
-            <button id="btn-ouvir" title="Ouvir fala">🎤</button>
-            <span class="status-texto" id="status-ouvindo">Toque para iniciar</span>
+            <button class="btn" id="btn-gravar">🔴 Gravar</button>
+            <button class="btn" id="btn-parar">⏹️ Parar</button>
+            <button class="btn" id="btn-copiar">📋 Copiar</button>
+            <button class="btn" id="btn-salvar">💾 Salvar Aula</button>
+        </div>
+        <div class="status-texto" id="status-ouvindo">Aguardando comando...</div>
+
+        <!-- Histórico de Gravações Salvas -->
+        <div class="painel-historico">
+            <h3>Histórico de Aulas Salvas</h3>
+            <ul class="lista-aulas" id="lista-aulas">
+                <li style="color: #777; font-size: 0.8rem; text-align: center;">Nenhuma aula salva ainda.</li>
+            </ul>
         </div>
     </div>
 
-    <!-- Estrutura nativa oficial do VLibras -->
+    <!-- Estrutura nativa do VLibras -->
     <div vw class="enabled">
         <div vw-access-button class="active"></div>
         <div vw-plugin-wrapper>
@@ -132,81 +204,188 @@
         </div>
     </div>
 
-    <!-- Scripts Oficiais e Lógica -->
+    <!-- Script Oficial e Lógica -->
     <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
     <script>
         // Inicializa o widget do VLibras
         new window.VLibras.Widget('https://vlibras.gov.br/app');
 
-        const btnOuvir = document.getElementById('btn-ouvir');
+        const btnGravar = document.getElementById('btn-gravar');
+        const btnParar = document.getElementById('btn-parar');
+        const btnCopiar = document.getElementById('btn-copiar');
+        const btnSalvar = document.getElementById('btn-salvar');
         const statusOuvindo = document.getElementById('status-ouvindo');
         const caixaTexto = document.getElementById('caixa-texto');
+        const inputTurma = document.getElementById('input-turma');
+        const inputDisciplina = document.getElementById('input-disciplina');
+        const listaAulas = document.getElementById('lista-aulas');
 
-        // Configuração da API de Reconhecimento de Fala nativa do navegador (SpeechRecognition)
+        let textoAcumulado = "";
+        let recognition = null;
+        let gravando = false;
+
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        
+
         if (!SpeechRecognition) {
-            alert("Seu navegador não suporta reconhecimento de voz. Tente usar o Google Chrome no celular.");
+            alert("Seu navegador não suporta reconhecimento de voz. Utilize o Google Chrome.");
         } else {
-            const recognition = new SpeechRecognition();
+            recognition = new SpeechRecognition();
             recognition.lang = 'pt-BR';
             recognition.continuous = true;
             recognition.interimResults = true;
 
-            let gravando = false;
-
-            btnOuvir.addEventListener('click', () => {
-                if (!gravando) {
-                    recognition.start();
-                } else {
-                    recognition.stop();
-                }
-            });
-
             recognition.onstart = () => {
                 gravando = true;
-                btnOuvir.classList.add('ouvindo');
-                statusOuvindo.textContent = "Ouvindo... Fale agora";
-                caixaTexto.innerHTML = ""; // Limpa a caixa ao iniciar nova escuta
+                btnGravar.classList.add('gravando');
+                btnGravar.textContent = "Gravando...";
+                btnParar.style.display = "inline-block";
+                statusOuvindo.textContent = "Ouvindo e traduzindo em tempo real... (Diga 'OK pare' para encerrar)";
             };
 
             recognition.onresult = (event) => {
-                let transcricaoInterina = '';
-                let transcricaoFinal = '';
-
+                let transcricaoAtual = '';
                 for (let i = event.resultIndex; i < event.results.length; i++) {
-                    const texto = event.results[i][0].transcript;
-                    if (event.results[i].isFinal) {
-                        transcricaoFinal += texto + ' ';
-                    } else {
-                        transcricaoInterina += texto;
-                    }
+                    transcricaoAtual += event.results[i][0].transcript;
                 }
 
-                // Exibe o texto na caixa do celular
-                const textoCompleto = transcricaoFinal || transcricaoInterina;
-                if (textoCompleto) {
-                    caixaTexto.innerHTML = `<p>${textoCompleto}</p>`;
-                    caixaTexto.scrollTop = caixaTexto.scrollHeight;
+                let textoMinusculo = transcricaoAtual.toLowerCase();
 
-                    // Envia automaticamente para o campo de texto oculto/gerenciado do VLibras traduzir
-                    enviarParaVLibras(textoCompleto);
+                // Comando por voz para parar: "ok pare" ou "pare"
+                if (textoMinusculo.includes("ok pare") || textoMinusculo.includes("pare")) {
+                    pararGravacao();
+                    return;
                 }
+
+                // Acumula o texto da aula
+                let textoFinalExibicao = textoAcumulado + " " + transcricaoAtual;
+                caixaTexto.innerHTML = `<p>${textoFinalExibicao}</p>`;
+                caixaTexto.scrollTop = caixaTexto.scrollHeight;
+
+                // Envia para o VLibras traduzir o trecho atual
+                enviarParaVLibras(transcricaoAtual);
             };
 
             recognition.onerror = (event) => {
-                console.error("Erro no reconhecimento de voz:", event.error);
-                statusOuvindo.textContent = "Erro ao ouvir. Tente novamente.";
+                console.error("Erro de áudio:", event.error);
             };
 
             recognition.onend = () => {
-                gravando = false;
-                btnOuvir.classList.remove('ouvindo');
-                statusOuvindo.textContent = "Toque para iniciar";
+                if (gravando) {
+                    // Mantém a escuta ativa caso ocorra pausas longas
+                    try { recognition.start(); } catch(e) {}
+                }
             };
         }
 
-        // Função que injeta o texto reconhecido no input interno do plugin do VLibras
+        function iniciarGravacao() {
+            if (!recognition) return;
+            try {
+                recognition.start();
+            } catch(e) {
+                console.log("Reconhecimento já iniciado");
+            }
+        }
+
+        function pararGravacao() {
+            if (!recognition) return;
+            gravando = false;
+            try { recognition.stop(); } catch(e) {}
+            
+            // Adiciona o texto interino definitivo ao acumulado geral
+            textoAcumulado = caixaTexto.innerText;
+            
+            btnGravar.classList.remove('gravando');
+            btnGravar.textContent = "🔴 Gravar";
+            btnParar.style.display = "none";
+            statusOuvindo.textContent = "Gravação pausada.";
+        }
+
+        // Eventos dos botões principais
+        btnGravar.addEventListener('click', () => {
+            if (!gravando) {
+                iniciarGravacao();
+            }
+        });
+
+        btnParar.addEventListener('click', () => {
+            pararGravacao();
+        });
+
+        // Copiar texto para a área de transferência
+        btnCopiar.addEventListener('click', () => {
+            const textoParaCopiar = caixaTexto.innerText;
+            navigator.clipboard.writeText(textoParaCopiar).then(() => {
+                alert("Texto copiado para a área de transferência!");
+            });
+        });
+
+        // Salvar Aula no Histórico Local
+        btnSalvar.addEventListener('click', () => {
+            const turma = inputTurma.value.trim() || "Turma Geral";
+            const disciplina = inputDisciplina.value.trim() || "Disciplina Geral";
+            const conteudo = caixaTexto.innerText.trim();
+
+            if (!conteudo || conteudo.includes("começar a transcrição")) {
+                alert("Não há conteúdo gravado para salvar.");
+                return;
+            }
+
+            const agora = new Date();
+            const dataHora = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            
+            // Formato do nome exigido: Data e Hora - Turma - Disciplina
+            const nomeRegistro = `${dataHora} - ${turma} - ${disciplina}`;
+
+            const aulaSalva = {
+                id: Date.now(),
+                nome: nomeRegistro,
+                conteudo: conteudo
+            };
+
+            let historico = JSON.parse(localStorage.getItem('historico_aulas') || '[]');
+            historico.unshift(aulaSalva); // Adiciona no topo
+            localStorage.setItem('historico_aulas', JSON.stringify(historico));
+
+            carregarHistorico();
+            alert("Aula salva com sucesso no histórico!");
+        });
+
+        // Carrega o histórico salvo na tela
+        function carregarHistorico() {
+            const historico = JSON.parse(localStorage.getItem('historico_aulas') || '[]');
+            listaAulas.innerHTML = "";
+
+            if (historico.length === 0) {
+                listaAulas.innerHTML = `<li style="color: #777; font-size: 0.8rem; text-align: center;">Nenhuma aula salva ainda.</li>`;
+                return;
+            }
+
+            historico.forEach(aula => {
+                const li = document.createElement('li');
+                li.className = 'item-aula';
+                li.innerHTML = `
+                    <span>📚 <strong>${aula.nome}</strong></span>
+                    <button onclick="abrirAula(${aula.id})">Abrir</button>
+                `;
+                listaAulas.appendChild(li);
+            });
+        }
+
+        // Abre uma aula salva para leitura e tradução via VLibras
+        window.abrirAula = function(id) {
+            const historico = JSON.parse(localStorage.getItem('historico_aulas') || '[]');
+            const aula = historico.find(a => a.id === id);
+            if (aula) {
+                caixaTexto.innerHTML = `<p>${aula.conteudo}</p>`;
+                textoAcumulado = aula.conteudo;
+                
+                // Envia o conteúdo salvo para o VLibras traduzir de uma vez
+                enviarParaVLibras(aula.conteudo);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        };
+
+        // Envia o texto para o input interno do plugin oficial do VLibras
         function enviarParaVLibras(texto) {
             const inputVLibras = document.querySelector('.vpw-text-input') || document.querySelector('textarea');
             if (inputVLibras) {
@@ -219,6 +398,9 @@
                 }
             }
         }
+
+        // Carrega o histórico ao abrir a página
+        carregarHistorico();
     </script>
 </body>
 </html>
