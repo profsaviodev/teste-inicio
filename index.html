@@ -14,15 +14,15 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- Tesseract.js (para OCR - Leitura de Texto) -->
+    <!-- Tesseract.js (OCR) -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     
-    <!-- TensorFlow.js & MobileNet (para Identificação da Imagem/Objetos) -->
+    <!-- TensorFlow.js & MobileNet -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
     
-    <!-- Html5-QRCode (para leitura de QR Code, Pix e Código de Barras) -->
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <!-- ZXing (Motor Ultrarrápido de Barcode/QR) -->
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
 
     <style>
         body {
@@ -77,6 +77,24 @@
             color: #FFFFFF !important;
         }
 
+        .font-text-normal { font-size: 1.125rem; line-height: 1.75rem; }
+        .font-text-large { font-size: 1.375rem; line-height: 2rem; }
+        .font-text-xlarge { font-size: 1.65rem; line-height: 2.25rem; }
+        
+        .scan-line {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: #22c55e;
+            box-shadow: 0 0 10px #22c55e;
+            animation: scanAnim 2s infinite ease-in-out;
+        }
+        @keyframes scanAnim {
+            0% { top: 10%; }
+            50% { top: 90%; }
+            100% { top: 10%; }
+        }
+
         .libras-pulse {
             animation: pulse-ring 2.5s infinite ease-in-out;
         }
@@ -85,14 +103,11 @@
             50% { transform: scale(1.03); opacity: 1; }
             100% { transform: scale(0.97); opacity: 0.8; }
         }
-
-        .font-text-normal { font-size: 1.125rem; line-height: 1.75rem; }
-        .font-text-large { font-size: 1.375rem; line-height: 2rem; }
-        .font-text-xlarge { font-size: 1.65rem; line-height: 2.25rem; }
     </style>
 </head>
 <body id="appBody" class="bg-slate-100 text-slate-900 min-h-screen flex flex-col font-text-normal pb-28">
 
+    <!-- CABEÇALHO -->
     <header role="banner" class="bg-blue-950 text-white shadow-xl sticky top-0 z-40 border-b-4 border-amber-400">
         <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
             <div class="flex items-center gap-3">
@@ -123,11 +138,12 @@
         </div>
     </header>
 
+    <!-- BARRA FIXA DE LEGENDA / VOZ -->
     <div id="liveCaptionContainer" class="caption-bar fixed bottom-0 left-0 right-0 z-50 p-3 text-center border-t-2 border-amber-400 flex items-center justify-between px-6" role="region" aria-live="assertive">
         <div class="flex items-center gap-3 w-full max-w-5xl mx-auto">
             <span class="bg-amber-400 text-blue-950 px-2 py-0.5 rounded text-xs font-black shrink-0">LEGENDA / VOZ:</span>
             <p id="liveCaptionText" class="text-lg font-bold tracking-wide text-amber-200 truncate">
-                Bem-vindo ao Sênior Seguro. Clique no microfone ou digite seu texto.
+                Bem-vindo ao Sênior Seguro. Selecione uma opção ou fale no microfone.
             </p>
         </div>
         <button onclick="repeatLastSpeech()" class="ml-2 bg-blue-800 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm shrink-0 flex items-center gap-1">
@@ -135,8 +151,10 @@
         </button>
     </div>
 
+    <!-- CONTEÚDO PRINCIPAL -->
     <main class="max-w-6xl mx-auto px-4 py-6 flex-grow w-full space-y-8" id="mainContent">
 
+        <!-- BOAS-VINDAS -->
         <section class="bg-card bg-white rounded-2xl p-6 shadow-md border-l-8 border-blue-600">
             <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div class="space-y-2">
@@ -144,16 +162,16 @@
                         Navegação Totalmente Acessível e Protegida
                     </h2>
                     <p class="text-slate-700">
-                        Reconhecimento de voz em tempo real, leitura de imagens (OCR e objetos) e leitor de códigos QR e Pix.
+                        Reconhecimento de voz, Câmera Unificada com IA, Leitor Automático de Códigos e Tradutor LIBRAS.
                     </p>
                 </div>
-                <button onclick="speakSection('Apresentação', 'Bem-vindo ao Sênior Seguro! Use o sistema para leitura de voz, documentos ou QR codes.')" class="bg-blue-100 hover:bg-blue-200 text-blue-950 px-4 py-3 rounded-xl font-bold flex items-center gap-2 shadow shrink-0">
+                <button onclick="speakSection('Apresentação', 'Bem-vindo ao Sênior Seguro! Escolha uma das ferramentas abaixo.')" class="bg-blue-100 hover:bg-blue-200 text-blue-950 px-4 py-3 rounded-xl font-bold flex items-center gap-2 shadow shrink-0">
                     <i class="fa-solid fa-volume-high text-xl text-blue-700" aria-hidden="true"></i> Ouvir Boas-Vindas
                 </button>
             </div>
         </section>
 
-        <!-- SEÇÃO 1: LEITOR E INTERAÇÃO POR VOZ COM COPIAR E BAIXAR -->
+        <!-- SEÇÃO 1: VOZ E DITADO -->
         <article id="secao-leitor-voz" class="bg-card bg-white rounded-2xl p-6 shadow-md border border-slate-200" tabindex="0" onfocus="trackDwell('Leitor de Texto e Voz')" onmouseenter="trackDwell('Leitor de Texto e Voz')">
             <header class="flex items-center justify-between mb-4 flex-wrap gap-3">
                 <div class="flex items-center gap-3">
@@ -165,9 +183,6 @@
                         <p class="text-slate-600 text-sm">Fale no microfone para transcrever ou digite abaixo para ouvir e salvar.</p>
                     </div>
                 </div>
-                <span class="bg-blue-50 text-blue-800 text-xs font-black px-3 py-1 rounded-full border border-blue-300">
-                    <i class="fa-solid fa-eye-slash mr-1"></i> Transcrição ao Vivo
-                </span>
             </header>
 
             <div class="space-y-4">
@@ -223,8 +238,8 @@
             </div>
         </article>
 
-        <!-- SEÇÃO 2: TRADUTOR LIBRAS -->
-        <article id="secao-libras" class="bg-card bg-white rounded-2xl p-6 shadow-md border border-slate-200" tabindex="0" onfocus="trackDwell('Central LIBRAS')" onmouseenter="trackDwell('Central LIBRAS')">
+        <!-- SEÇÃO 2: TRADUTOR LIBRAS E ALERTAS VISUAIS -->
+        <article id="secao-libras" class="bg-card bg-white rounded-2xl p-6 shadow-md border border-slate-200" tabindex="0" onfocus="trackDwell('Tradutor LIBRAS')" onmouseenter="trackDwell('Tradutor LIBRAS')">
             <header class="flex items-center justify-between mb-4 flex-wrap gap-3">
                 <div class="flex items-center gap-3">
                     <div class="bg-emerald-100 text-emerald-800 p-3 rounded-2xl">
@@ -236,14 +251,14 @@
                     </div>
                 </div>
                 <span class="bg-emerald-50 text-emerald-800 text-xs font-black px-3 py-1 rounded-full border border-emerald-300">
-                    <i class="fa-solid fa-ear-deaf mr-1"></i> Acessibilidade Surdos
+                    <i class="fa-solid fa-ear-deaf mr-1"></i> Acessibilidade Surdos[cite: 3]
                 </span>
             </header>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
                 <div class="bg-slate-900 text-white rounded-2xl p-4 text-center border-4 border-emerald-500 relative min-h-[200px] flex flex-col justify-center items-center">
                     <div id="librasAvatarGraphic" class="space-y-3 libras-pulse">
-                        <i class="fa-solid fa-user-ninja text-6xl text-emerald-400"></i>
+                        <i class="fa-solid fa-user-ninja text-6xl text-emerald-400" aria-hidden="true"></i>
                         <p id="librasSignalTitle" class="font-extrabold text-amber-300 text-lg">Intérprete LIBRAS Ativo</p>
                         <p id="librasGestureDescription" class="text-sm text-slate-300 px-2">
                             Sinalização: [Mãos abertas na altura do peito - 'BEM-VINDO']
@@ -255,19 +270,19 @@
                     <h4 class="font-extrabold text-slate-800">Escolha um tópico para ver em LIBRAS:</h4>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <button onclick="triggerLibras('GOLPE PIX', 'Mão direita fechada apontando para a palma esquerda - Alerta de Dinheiro.')" class="bg-slate-50 hover:bg-emerald-50 border-2 border-slate-300 hover:border-emerald-500 p-3 rounded-xl font-bold text-left flex items-center gap-3">
-                            <i class="fa-solid fa-money-bill-transfer text-emerald-600 text-2xl"></i>
+                            <i class="fa-solid fa-money-bill-transfer text-emerald-600 text-2xl" aria-hidden="true"></i>
                             <span>Sinal: Golpe do Pix</span>
                         </button>
                         <button onclick="triggerLibras('SENHA SEGURA', 'Dedos indicadores cruzados em frente ao peito - SENHA FECHADA.')" class="bg-slate-50 hover:bg-emerald-50 border-2 border-slate-300 hover:border-emerald-500 p-3 rounded-xl font-bold text-left flex items-center gap-3">
-                            <i class="fa-solid fa-lock text-emerald-600 text-2xl"></i>
+                            <i class="fa-solid fa-lock text-emerald-600 text-2xl" aria-hidden="true"></i>
                             <span>Sinal: Senha Segura</span>
                         </button>
                         <button onclick="triggerLibras('FALSO PARENTE', 'Sinal de FILHO seguido de PERIGO.')" class="bg-slate-50 hover:bg-emerald-50 border-2 border-slate-300 hover:border-emerald-500 p-3 rounded-xl font-bold text-left flex items-center gap-3">
-                            <i class="fa-brands fa-whatsapp text-emerald-600 text-2xl"></i>
+                            <i class="fa-brands fa-whatsapp text-emerald-600 text-2xl" aria-hidden="true"></i>
                             <span>Sinal: Falso Whatsapp</span>
                         </button>
                         <button onclick="triggerLibras('PEDIR AJUDA', 'Duas mãos abertas para cima se movendo para frente - SOCORRO/AJUDA.')" class="bg-slate-50 hover:bg-emerald-50 border-2 border-slate-300 hover:border-emerald-500 p-3 rounded-xl font-bold text-left flex items-center gap-3">
-                            <i class="fa-solid fa-hand-holding-hand text-emerald-600 text-2xl"></i>
+                            <i class="fa-solid fa-hand-holding-hand text-emerald-600 text-2xl" aria-hidden="true"></i>
                             <span>Sinal: Pedir Ajuda SOS</span>
                         </button>
                     </div>
@@ -275,112 +290,126 @@
             </div>
         </article>
 
-        <!-- SEÇÃO 3: CÂMERA INTELIGENTE (MODO OCR E MODO IDENTIFICAÇÃO DE OBJETOS) -->
-        <article id="secao-camera-ia" class="bg-card bg-white rounded-2xl p-6 shadow-md border border-slate-200" tabindex="0" onfocus="trackDwell('Câmera IA e Leitura')" onmouseenter="trackDwell('Câmera IA e Leitura')">
+        <!-- SEÇÃO 3: CÂMERA ÚNICA COM MULTIMODOS (BOX UNIFICADO COM BARCODE + IA + OCR) -->
+        <article id="secao-camera-ia" class="bg-card bg-white rounded-2xl p-6 shadow-md border-2 border-purple-500" tabindex="0" onfocus="trackDwell('Câmera Unificada IA')" onmouseenter="trackDwell('Câmera Unificada IA')">
             <header class="flex items-center justify-between mb-4 flex-wrap gap-3">
                 <div class="flex items-center gap-3">
                     <div class="bg-purple-100 text-purple-800 p-3 rounded-2xl">
-                        <i class="fa-solid fa-camera-retro text-3xl" aria-hidden="true"></i>
+                        <i class="fa-solid fa-camera text-3xl" aria-hidden="true"></i>
                     </div>
                     <div>
-                        <h3 class="text-2xl font-black text-slate-900">3. Câmera IA: Leitura de Textos e Reconhecimento da Imagem</h3>
-                        <p class="text-slate-600 text-sm">Escolha entre ler o texto de um documento ou identificar o que está na foto.</p>
+                        <h3 class="text-2xl font-black text-slate-900">3. Câmera IA Multifuncional Integrada</h3>
+                        <p class="text-slate-600 text-sm">Tudo no mesmo lugar: Leitura de Código de Barras, Análise de Objetos e Leitura de Texto/Rótulos.</p>
                     </div>
                 </div>
             </header>
 
-            <!-- Seleção de Modo -->
-            <div class="mb-4 bg-purple-50 p-3 rounded-xl border border-purple-200 flex flex-wrap items-center gap-4">
-                <span class="font-bold text-purple-950">Selecione o Modo de Análise:</span>
-                <label class="inline-flex items-center gap-2 cursor-pointer font-bold text-slate-800">
-                    <input type="radio" name="cameraMode" value="ocr" checked class="w-5 h-5 text-purple-600">
-                    <span>1. Modo Leitura de Texto (OCR)</span>
-                </label>
-                <label class="inline-flex items-center gap-2 cursor-pointer font-bold text-slate-800">
-                    <input type="radio" name="cameraMode" value="object" class="w-5 h-5 text-purple-600">
-                    <span>2. Modo Identificar o que há na Imagem</span>
-                </label>
+            <!-- CONTROLES DE IDIOMA E SELEÇÃO DE MODO DE CÂMERA -->
+            <div class="mb-4 bg-purple-50 p-4 rounded-xl border border-purple-200 space-y-4">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-purple-200 pb-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-language text-2xl text-purple-800"></i>
+                        <label for="targetLanguage" class="font-black text-purple-950 text-base">
+                            Idioma do Leitor de Voz e OCR:
+                        </label>
+                    </div>
+                    <select id="targetLanguage" class="p-2.5 border-2 border-purple-400 rounded-xl font-bold text-slate-900 bg-white w-full md:w-auto shadow-sm" onchange="updateOCRAndVoiceLang()">
+                        <option value="pt-BR" data-ocr="por" selected>🇧🇷 Português (Brasil)</option>
+                        <option value="en-US" data-ocr="eng">🇺🇸 English (United States)</option>
+                        <option value="es-ES" data-ocr="spa">🇪🇸 Español</option>
+                        <option value="fr-FR" data-ocr="fra">🇫🇷 Français</option>
+                        <option value="de-DE" data-ocr="deu">🇩🇪 Deutsch</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <label class="flex items-center gap-3 cursor-pointer font-bold text-slate-800 p-3 bg-white rounded-xl border-2 border-purple-300 hover:border-purple-600 transition">
+                        <input type="radio" name="cameraMode" value="auto_barcode" checked class="w-5 h-5 text-purple-600 shrink-0" onchange="switchCameraMode()">
+                        <div>
+                            <span class="text-base font-black text-purple-950 block">📊 Leitor de Código de Barras / Boleto / Pix</span>
+                            <span class="text-xs font-normal text-slate-600">Varredura automática e contínua em tempo real.</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-center gap-3 cursor-pointer font-bold text-slate-800 p-3 bg-white rounded-xl border-2 border-purple-300 hover:border-purple-600 transition">
+                        <input type="radio" name="cameraMode" value="ia_object" class="w-5 h-5 text-purple-600 shrink-0" onchange="switchCameraMode()">
+                        <div>
+                            <span class="text-base font-black text-purple-950 block">🧠 IA Reconhecimento Visual Avançado</span>
+                            <span class="text-xs font-normal text-slate-600">Identifica objetos, remédios, alimentos e ambientes.</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-center gap-3 cursor-pointer font-bold text-slate-800 p-3 bg-white rounded-xl border-2 border-purple-300 hover:border-purple-600 transition">
+                        <input type="radio" name="cameraMode" value="ocr_text" class="w-5 h-5 text-purple-600 shrink-0" onchange="switchCameraMode()">
+                        <div>
+                            <span class="text-base font-black text-purple-950 block">📄 Leitor de Texto / Rótulo (OCR)</span>
+                            <span class="text-xs font-normal text-slate-600">Lê bulas, embalagens, papéis e avisos em voz alta.</span>
+                        </div>
+                    </label>
+                </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+            <!-- BOX UNIFICADO DE VISUALIZAÇÃO E RESULTADO -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                 <div class="space-y-3">
-                    <div class="relative bg-black rounded-2xl overflow-hidden aspect-video border-4 border-purple-600 flex items-center justify-center">
-                        <video id="webcamVideo" autoplay playsinline class="w-full h-full object-cover hidden"></video>
-                        <div id="cameraPlaceholder" class="text-center p-6 text-white space-y-3">
+                    <div class="relative bg-black rounded-2xl overflow-hidden aspect-video border-4 border-purple-700 flex items-center justify-center shadow-inner">
+                        <video id="unifiedCameraVideo" autoplay playsinline muted class="w-full h-full object-cover hidden"></video>
+                        <div id="scanLine" class="scan-line hidden"></div>
+                        <div id="unifiedCameraPlaceholder" class="text-center p-6 text-white space-y-3">
                             <i class="fa-solid fa-camera text-5xl text-purple-400"></i>
                             <p class="font-bold text-lg">Câmera Desativada</p>
+                            <p class="text-xs text-purple-200">Ligue a câmera abaixo para iniciar.</p>
                         </div>
                     </div>
 
                     <div class="flex flex-wrap gap-2">
-                        <button id="btnStartCamera" onclick="startCamera()" class="bg-purple-700 hover:bg-purple-800 text-white font-bold px-4 py-2.5 rounded-xl flex items-center gap-2">
-                            <i class="fa-solid fa-video"></i> Ligar Câmera
+                        <button id="btnToggleCamera" onclick="toggleUnifiedCamera()" class="bg-purple-700 hover:bg-purple-800 text-white font-bold px-5 py-3 rounded-xl flex items-center gap-2 shadow-md text-base">
+                            <i class="fa-solid fa-power-off"></i> <span id="btnCameraText">Ligar Câmera</span>
                         </button>
-                        <button id="btnCaptureAI" onclick="captureAndAnalyzeAI()" class="bg-amber-500 hover:bg-amber-600 text-blue-950 font-black px-4 py-2.5 rounded-xl flex items-center gap-2 disabled:opacity-50" disabled>
-                            <i class="fa-solid fa-microchip"></i> Analisar Foto
-                        </button>
-                    </div>
-                </div>
-
-                <div class="bg-slate-50 p-5 rounded-2xl border-2 border-slate-200 space-y-3 min-h-[200px]">
-                    <h4 class="font-black text-slate-900 text-lg flex items-center gap-2">
-                        <i class="fa-solid fa-eye text-purple-600"></i> Resultado da Câmera:
-                    </h4>
-                    <p id="aiCameraResult" class="text-slate-700 text-base leading-relaxed whitespace-pre-line">
-                        Ligue a câmera, aponte para um objeto ou papel e clique em "Analisar Foto".
-                    </p>
-                </div>
-            </div>
-        </article>
-
-        <!-- SEÇÃO 4: LEITOR DE CÓDIGO DE BARRAS, QR CODE E PIX -->
-        <article id="secao-qrcode-pix" class="bg-card bg-white rounded-2xl p-6 shadow-md border border-slate-200" tabindex="0" onfocus="trackDwell('Leitor QR e Pix')" onmouseenter="trackDwell('Leitor QR e Pix')">
-            <header class="flex items-center gap-3 mb-4">
-                <div class="bg-teal-100 text-teal-800 p-3 rounded-2xl">
-                    <i class="fa-solid fa-qrcode text-3xl" aria-hidden="true"></i>
-                </div>
-                <div>
-                    <h3 class="text-2xl font-black text-slate-900">4. Leitor de Código de Barras, QR Code e Pix</h3>
-                    <p class="text-slate-600 text-sm">Escaneie um código de boleto, QR Code ou chave Pix para ler na tela.</p>
-                </div>
-            </header>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                <div class="space-y-3">
-                    <div id="reader" class="w-full bg-slate-900 rounded-2xl overflow-hidden border-4 border-teal-600 min-h-[220px]"></div>
-                    <div class="flex flex-wrap gap-2">
-                        <button onclick="startQrScanner()" class="bg-teal-700 hover:bg-teal-800 text-white font-bold px-4 py-2.5 rounded-xl flex items-center gap-2">
-                            <i class="fa-solid fa-camera"></i> Iniciar Leitor de Código
-                        </button>
-                        <button onclick="stopQrScanner()" class="bg-slate-300 hover:bg-slate-400 text-slate-800 font-bold px-4 py-2.5 rounded-xl">
-                            Parar Leitor
+                        
+                        <button id="btnTriggerCapture" onclick="triggerManualCapture()" class="bg-amber-500 hover:bg-amber-600 text-blue-950 font-black px-5 py-3 rounded-xl flex items-center gap-2 shadow-md text-base disabled:opacity-50 hidden" disabled>
+                            <i class="fa-solid fa-microchip"></i> Capturar &amp; Analisar
                         </button>
                     </div>
                 </div>
 
-                <div class="bg-slate-50 p-5 rounded-2xl border-2 border-slate-200 space-y-3 min-h-[200px]">
-                    <h4 class="font-black text-slate-900 text-lg flex items-center gap-2">
-                        <i class="fa-solid fa-barcode text-teal-600"></i> Código Lido:
-                    </h4>
-                    <p id="qrScanResult" class="text-slate-700 text-base leading-relaxed break-all">
-                        Aguardando leitura do código de barras, QR Code ou chave Pix...
-                    </p>
-                    <button id="btnCopyQr" onclick="copyQrResult()" class="hidden bg-teal-700 hover:bg-teal-800 text-white font-bold px-3 py-1.5 rounded-lg text-sm">
-                        <i class="fa-solid fa-copy"></i> Copiar Código
-                    </button>
+                <!-- DISPLAY DE RESULTADOS DO MESMO BOX -->
+                <div class="bg-slate-50 p-5 rounded-2xl border-2 border-slate-300 space-y-4 min-h-[280px] flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="font-black text-slate-900 text-lg flex items-center gap-2">
+                                <i class="fa-solid fa-magnifying-glass text-purple-600"></i> Resultado da Análise:
+                            </h4>
+                            <span id="badgeModeStatus" class="bg-purple-200 text-purple-900 font-extrabold text-xs px-2.5 py-1 rounded-full">
+                                Modo: Código de Barras
+                            </span>
+                        </div>
+                        <div id="unifiedResultArea" class="text-slate-800 text-base leading-relaxed whitespace-pre-line break-all bg-white p-4 rounded-xl border border-slate-200 min-h-[160px]">
+                            Ligue a câmera para começar a leitura automática ou análise.
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 pt-2 border-t">
+                        <button id="btnCopyResult" onclick="copyUnifiedResult()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold px-4 py-2 rounded-xl text-sm shadow flex items-center gap-2 hidden">
+                            <i class="fa-solid fa-copy"></i> Copiar Resultado
+                        </button>
+                        <button id="btnSpeakResult" onclick="speakUnifiedResult()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-sm shadow flex items-center gap-2 hidden">
+                            <i class="fa-solid fa-volume-high"></i> Reouvir
+                        </button>
+                    </div>
                 </div>
             </div>
         </article>
 
-        <!-- SEÇÃO 5: VERIFICADOR DE GOLPES -->
+        <!-- SEÇÃO 4: VERIFICADOR DE GOLPES -->
         <article id="secao-verificador" class="bg-card bg-white rounded-2xl p-6 shadow-md border border-slate-200" tabindex="0" onfocus="trackDwell('Verificador de Mensagens')" onmouseenter="trackDwell('Verificador de Mensagens')">
             <header class="flex items-center gap-3 mb-4">
                 <div class="bg-amber-100 text-amber-800 p-3 rounded-2xl">
                     <i class="fa-solid fa-shield-halved text-3xl" aria-hidden="true"></i>
                 </div>
                 <div>
-                    <h3 class="text-2xl font-black text-slate-900">5. Verificador de Golpes de Mensagem</h3>
-                    <p class="text-slate-600 text-sm">Cole a mensagem que recebeu no WhatsApp para verificar se é suspeita.</p>
+                    <h3 class="text-2xl font-black text-slate-900">4. Verificador de Golpes de Mensagem</h3>
+                    <p class="text-slate-600 text-sm">Cole a mensagem que recebeu para verificar se há risco de fraude.</p>
                 </div>
             </header>
 
@@ -398,36 +427,7 @@
             <div id="analysisResult" class="hidden mt-4 p-4 rounded-xl border-2"></div>
         </article>
 
-        <!-- SEÇÃO 6: GUIA DOS GOLPES -->
-        <article id="secao-guia-golpes" class="space-y-4" tabindex="0" onfocus="trackDwell('Guia de Golpes')" onmouseenter="trackDwell('Guia de Golpes')">
-            <h3 class="text-2xl font-black text-slate-900 flex items-center gap-2">
-                <i class="fa-solid fa-triangle-exclamation text-amber-500" aria-hidden="true"></i> 6. Guia Rápido de Golpes Comuns
-            </h3>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-card bg-white rounded-2xl p-5 shadow-md border border-slate-200">
-                    <div class="flex items-center gap-3 mb-2 text-emerald-700 font-bold text-xl">
-                        <i class="fa-brands fa-whatsapp text-3xl"></i> Falso Filho no WhatsApp
-                    </div>
-                    <p class="text-slate-700 mb-3">Dizem que mudaram de número de telefone e pedem Pix urgente.</p>
-                    <div class="bg-red-50 border-l-4 border-red-500 p-3 rounded text-red-950 font-semibold">
-                        <strong>Solução:</strong> Ligue imediatamente para o número ANTIGO do seu parente.
-                    </div>
-                </div>
-
-                <div class="bg-card bg-white rounded-2xl p-5 shadow-md border border-slate-200">
-                    <div class="flex items-center gap-3 mb-2 text-blue-800 font-bold text-xl">
-                        <i class="fa-solid fa-building-columns text-3xl"></i> Falsa Central de Banco
-                    </div>
-                    <p class="text-slate-700 mb-3">Ligação alegando compra suspeita para fazer você fazer Pix.</p>
-                    <div class="bg-red-50 border-l-4 border-red-500 p-3 rounded text-red-950 font-semibold">
-                        <strong>Solução:</strong> Desligue! O banco nunca pede transferência por telefone.
-                    </div>
-                </div>
-            </div>
-        </article>
-
-        <!-- SEÇÃO 7: PAINEL DE AUDITORIA -->
+        <!-- SEÇÃO 5: PAINEL DE AUDITORIA -->
         <article id="secao-auditoria" class="bg-card bg-white rounded-2xl p-6 shadow-md border-2 border-purple-300" tabindex="0" onfocus="trackDwell('Painel de Auditoria')" onmouseenter="trackDwell('Painel de Auditoria')">
             <header class="flex items-center justify-between mb-4 flex-wrap gap-3">
                 <div class="flex items-center gap-3">
@@ -435,8 +435,8 @@
                         <i class="fa-solid fa-chart-pie text-3xl" aria-hidden="true"></i>
                     </div>
                     <div>
-                        <h3 class="text-2xl font-black text-slate-900">7. Relatório de Auditoria e Acessibilidade</h3>
-                        <p class="text-slate-600 text-sm">Tempo de permanência e engajamento em cada área.</p>
+                        <h3 class="text-2xl font-black text-slate-900">5. Relatório de Uso e Engajamento</h3>
+                        <p class="text-slate-600 text-sm">Estatísticas de navegação nas ferramentas do aplicativo.</p>
                     </div>
                 </div>
             </header>
@@ -447,10 +447,10 @@
                 </div>
 
                 <div class="space-y-3">
-                    <h4 class="font-black text-slate-800 text-lg">Métricas (Em Segundos):</h4>
+                    <h4 class="font-black text-slate-800 text-lg">Métricas (Tempo de Uso em Segundos):</h4>
                     <ul id="auditMetricsList" class="space-y-2 text-base font-semibold text-slate-700"></ul>
                     <button onclick="resetAuditMetrics()" class="text-xs text-red-600 underline font-bold hover:text-red-800">
-                        Zerar dados da auditoria
+                        Zerar estatísticas
                     </button>
                 </div>
             </div>
@@ -458,7 +458,7 @@
 
     </main>
 
-    <!-- MODAL SOS -->
+    <!-- MODAL SOS AJUDA -->
     <div id="helpModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="bg-white rounded-3xl shadow-2xl border-4 border-red-600 max-w-2xl w-full p-6 space-y-6 relative">
             <button onclick="closeHelpModal()" class="absolute top-4 right-4 bg-slate-200 hover:bg-slate-300 text-slate-900 rounded-full w-12 h-12 flex items-center justify-center font-black text-2xl">
@@ -471,18 +471,18 @@
                 </div>
                 <div>
                     <h2 id="modalTitle" class="text-3xl font-black text-red-700">Ajuda Urgente e SOS</h2>
-                    <p class="text-slate-600 font-bold">Passos de proteção imediata</p>
+                    <p class="text-slate-600 font-bold">Passos de emergência</p>
                 </div>
             </div>
 
             <div class="space-y-3 font-bold text-slate-800">
                 <div class="bg-red-50 p-3 rounded-xl border border-red-200 flex items-center gap-3">
                     <span class="bg-red-600 text-white font-black w-8 h-8 rounded-full flex items-center justify-center shrink-0">1</span>
-                    <span>PARE: Não envie Pix, senhas ou transferências.</span>
+                    <span>PARE: Não envie Pix ou dados para desconhecidos.</span>
                 </div>
                 <div class="bg-red-50 p-3 rounded-xl border border-red-200 flex items-center gap-3">
                     <span class="bg-red-600 text-white font-black w-8 h-8 rounded-full flex items-center justify-center shrink-0">2</span>
-                    <span>BANCO: Ligue para o telefone do verso do seu cartão.</span>
+                    <span>LIGUE: Ligue no telefone oficial atrás do seu cartão bancário.</span>
                 </div>
             </div>
 
@@ -512,16 +512,46 @@
         let availableVoices = [];
         let isListening = false;
         let recognition = null;
+        
         let mobileNetModel = null;
-        let html5QrCode = null;
+        let zxingReader = null;
+        let currentStream = null;
+        let isCameraActive = false;
+        let lastScannedBarcode = "";
+
+        // BANCO DE RECONHECIMENTO DE DADOS PARA PRODUTOS E OBJETOS COMUNS
+        const dicionarioAvançado = {
+            "mouse": "Mouse de Computador / Acessório de Informática",
+            "computer keyboard": "Teclado de Computador / Periférico",
+            "cellular telephone": "Telefone Celular / Smartphone",
+            "mobile phone": "Telefone Celular / Smartphone",
+            "laptop": "Computador Portátil / Notebook",
+            "bottle": "Garrafa, Frasco de Remédio ou Bebida",
+            "pop bottle": "Garrafa de Refrigerante ou Bebida",
+            "water bottle": "Garrafa de Água",
+            "pill bottle": "Frasco de Medicamento / Remédio",
+            "lotion": "Frasco de Creme / Loção / Cosmético",
+            "medicine": "Caixa ou Embalagem de Remédio",
+            "cup": "Xícara ou Copo",
+            "coffee mug": "Caneca de Café / Chá",
+            "book": "Livro, Caderno ou Revista",
+            "paper towel": "Papel Toalha ou Documento Impresso",
+            "wallet": "Carteira de Documentos / Dinheiro",
+            "money": "Cédula de Dinheiro / Papel Moeda",
+            "spectacles": "Óculos de Grau / Leitura",
+            "sunglasses": "Óculos Escuros",
+            "remote control": "Controle Remoto de TV ou Aparelho",
+            "television": "Televisor / Monitor",
+            "clock": "Relógio de Parede ou Mesa",
+            "digital clock": "Relógio Digital",
+            "soap dispenser": "Dispenser de Sabonete / Álcool em Gel"
+        };
 
         let dwellData = {
             'Leitor de Texto e Voz': 0,
-            'Central LIBRAS': 0,
-            'Câmera IA e Leitura': 0,
-            'Leitor QR e Pix': 0,
+            'Tradutor LIBRAS': 0,
+            'Câmera Unificada IA': 0,
             'Verificador de Mensagens': 0,
-            'Guia de Golpes': 0,
             'Painel de Auditoria': 0
         };
         let currentSection = null;
@@ -537,10 +567,10 @@
 
         async function loadMobileNetModel() {
             try {
-                mobileNetModel = await mobilenet.load();
-                console.log("Modelo MobileNet carregado com sucesso.");
+                mobileNetModel = await mobilenet.load({ version: 2, alpha: 1.0 });
+                console.log("IA MobileNet V2 Carregada.");
             } catch(e) {
-                console.error("Erro ao carregar modelo de visão:", e);
+                console.error("Erro ao carregar modelo de IA:", e);
             }
         }
 
@@ -552,8 +582,11 @@
                 if (!voiceSelect) return;
                 voiceSelect.innerHTML = '';
                 
-                let ptVoices = availableVoices.filter(v => v.lang.includes('pt') || v.lang.includes('PT'));
-                let listToUse = ptVoices.length > 0 ? ptVoices : availableVoices;
+                let targetLang = document.getElementById('targetLanguage').value || 'pt-BR';
+                let langPrefix = targetLang.split('-')[0];
+
+                let filteredVoices = availableVoices.filter(v => v.lang.toLowerCase().includes(langPrefix.toLowerCase()));
+                let listToUse = filteredVoices.length > 0 ? filteredVoices : availableVoices;
 
                 listToUse.forEach((voice) => {
                     let option = document.createElement('option');
@@ -568,19 +601,23 @@
             }
         }
 
-        // RECONHECIMENTO DE VOZ
+        function updateOCRAndVoiceLang() {
+            initVoices();
+            speakText("Idioma atualizado.");
+        }
+
         function setupVoiceRecognition() {
             if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
                 let SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
                 recognition = new SpeechRec();
-                recognition.lang = 'pt-BR';
+                recognition.lang = document.getElementById('targetLanguage').value || 'pt-BR';
                 recognition.continuous = false;
                 recognition.interimResults = true;
 
                 recognition.onstart = () => {
                     isListening = true;
                     document.getElementById('btnVoiceMic').classList.add('mic-active');
-                    document.getElementById('liveCaptionText').innerText = "🎙️ Ouvindo você... Pode falar!";
+                    document.getElementById('liveCaptionText').innerText = "🎙️ Ouvindo...";
                 };
 
                 recognition.onresult = (event) => {
@@ -588,37 +625,24 @@
                     for (let i = event.resultIndex; i < event.results.length; i++) {
                         transcript += event.results[i][0].transcript;
                     }
-                    
                     document.getElementById('customTextToSpeech').value = transcript;
-                    document.getElementById('liveCaptionText').innerText = "Você falou: " + transcript;
+                    document.getElementById('liveCaptionText').innerText = "Voz: " + transcript;
                 };
 
-                recognition.onerror = (event) => {
-                    let msg = "Erro ao reconhecer a voz.";
-                    if (event.error === 'not-allowed') msg = "Permissão do microfone negada!";
-                    if (event.error === 'no-speech') msg = "Nenhuma fala detectada.";
-                    
-                    document.getElementById('liveCaptionText').innerText = msg;
-                    stopVoiceRecognition();
-                };
-
+                recognition.onerror = () => { stopVoiceRecognition(); };
                 recognition.onend = () => {
                     stopVoiceRecognition();
                     let texto = document.getElementById('customTextToSpeech').value;
-                    if (texto.trim() !== '') {
-                        speakText(`Entendi: ${texto}`);
-                    }
+                    if (texto.trim() !== '') speakText(`Reconhecido: ${texto}`);
                 };
             }
         }
 
         function toggleVoiceRecognition() {
             if (!recognition) return;
-            if (isListening) {
-                recognition.stop();
-            } else {
-                recognition.start();
-            }
+            recognition.lang = document.getElementById('targetLanguage').value || 'pt-BR';
+            if (isListening) recognition.stop();
+            else recognition.start();
         }
 
         function stopVoiceRecognition() {
@@ -627,163 +651,262 @@
             if (btn) btn.classList.remove('mic-active');
         }
 
-        // COPIAR E BAIXAR
-        function copyToClipboard() {
-            let txt = document.getElementById('customTextToSpeech').value;
-            if (!txt.trim()) {
-                alert("Não há texto para copiar!");
-                return;
-            }
-            navigator.clipboard.writeText(txt).then(() => {
-                speakText("Texto copiado.");
-            });
+        function triggerLibras(title, description) {
+            document.getElementById('librasSignalTitle').innerText = title;
+            document.getElementById('librasGestureDescription').innerText = `Sinalização: [${description}]`;
+            speakText(`Sinal LIBRAS selecionado: ${title}`);
         }
 
-        function downloadTextFile() {
-            let txt = document.getElementById('customTextToSpeech').value;
-            if (!txt.trim()) {
-                alert("Não há texto para baixar!");
-                return;
+        // CONTROLADOR DA CÂMERA ÚNICA COM MULTIMODOS
+        async function toggleUnifiedCamera() {
+            if (isCameraActive) {
+                stopUnifiedCamera();
+            } else {
+                startUnifiedCamera();
             }
-            let blob = new Blob([txt], { type: "text/plain;charset=utf-8" });
-            let a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = "texto_gravado.txt";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            speakText("Arquivo baixado.");
         }
 
-        // CÂMERA (MODO OCR E MODO IDENTIFICAÇÃO DE IMAGEM)
-        async function startCamera() {
-            let video = document.getElementById('webcamVideo');
-            let placeholder = document.getElementById('cameraPlaceholder');
-            let btnCapture = document.getElementById('btnCaptureAI');
+        async function startUnifiedCamera() {
+            let video = document.getElementById('unifiedCameraVideo');
+            let placeholder = document.getElementById('unifiedCameraPlaceholder');
+            let btnText = document.getElementById('btnCameraText');
 
             try {
-                let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                video.srcObject = stream;
+                currentStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } 
+                });
+                video.srcObject = currentStream;
                 video.classList.remove('hidden');
                 placeholder.classList.add('hidden');
-                btnCapture.disabled = false;
-                speakText("Câmera ativada.");
+                isCameraActive = true;
+                btnText.innerText = "Desligar Câmera";
+                
+                switchCameraMode();
             } catch (err) {
-                alert("Não foi possível acessar a câmera.");
+                alert("Erro ao acessar a câmera. Verifique se o acesso foi permitido.");
             }
         }
 
-        async function captureAndAnalyzeAI() {
-            let video = document.getElementById('webcamVideo');
-            let result = document.getElementById('aiCameraResult');
-            let btnCapture = document.getElementById('btnCaptureAI');
-            let selectedMode = document.querySelector('input[name="cameraMode"]:checked').value;
-
-            if (!video.srcObject) {
-                alert("Por favor, ligue a câmera primeiro!");
-                return;
+        function stopUnifiedCamera() {
+            stopZXingScanner();
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
             }
+            let video = document.getElementById('unifiedCameraVideo');
+            let placeholder = document.getElementById('unifiedCameraPlaceholder');
+            let btnText = document.getElementById('btnCameraText');
+            let scanLine = document.getElementById('scanLine');
 
-            btnCapture.disabled = true;
+            video.classList.add('hidden');
+            scanLine.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            isCameraActive = false;
+            btnText.innerText = "Ligar Câmera";
+            document.getElementById('btnTriggerCapture').disabled = true;
+            document.getElementById('btnTriggerCapture').classList.add('hidden');
+            speakText("Câmera desligada.");
+        }
+
+        function switchCameraMode() {
+            let selectedMode = document.querySelector('input[name="cameraMode"]:checked').value;
+            let badge = document.getElementById('badgeModeStatus');
+            let btnTrigger = document.getElementById('btnTriggerCapture');
+            let scanLine = document.getElementById('scanLine');
+            let resArea = document.getElementById('unifiedResultArea');
+
+            stopZXingScanner();
+
+            if (selectedMode === 'auto_barcode') {
+                badge.innerText = "Modo: Código de Barras / Boleto / Pix";
+                badge.className = "bg-teal-200 text-teal-900 font-extrabold text-xs px-2.5 py-1 rounded-full";
+                btnTrigger.classList.add('hidden');
+                
+                if (isCameraActive) {
+                    scanLine.classList.remove('hidden');
+                    resArea.innerText = "🔍 Varrendo imagem em busca de Código de Barras, Boleto ou QR Pix...";
+                    startZXingScanner();
+                } else {
+                    resArea.innerText = "Ligue a câmera para iniciar a varredura de código de barras.";
+                }
+
+            } else if (selectedMode === 'ia_object') {
+                badge.innerText = "Modo: IA Reconhecimento Visual";
+                badge.className = "bg-purple-200 text-purple-900 font-extrabold text-xs px-2.5 py-1 rounded-full";
+                scanLine.classList.add('hidden');
+                btnTrigger.classList.remove('hidden');
+                btnTrigger.disabled = !isCameraActive;
+
+                if (isCameraActive) {
+                    resArea.innerText = "Clique em 'Capturar & Analisar' para a IA identificar o objeto/produto na tela.";
+                    speakText("Modo Inteligência Artificial ativado. Posicione o objeto e clique em capturar.");
+                } else {
+                    resArea.innerText = "Ligue a câmera para usar o reconhecimento de IA.";
+                }
+
+            } else if (selectedMode === 'ocr_text') {
+                badge.innerText = "Modo: Leitor de Texto / Rótulo (OCR)";
+                badge.className = "bg-amber-200 text-amber-900 font-extrabold text-xs px-2.5 py-1 rounded-full";
+                scanLine.classList.add('hidden');
+                btnTrigger.classList.remove('hidden');
+                btnTrigger.disabled = !isCameraActive;
+
+                if (isCameraActive) {
+                    resArea.innerText = "Clique em 'Capturar & Analisar' para ler bulas, rótulos ou documentos.";
+                    speakText("Modo Leitura de Texto ativado. Aponta para a palavra ou documento e clique em capturar.");
+                } else {
+                    resArea.innerText = "Ligue a câmera para extrair e ler textos.";
+                }
+            }
+        }
+
+        // MOTOR ZXING AJUSTADO PARA DECODIFICAÇÃO EM TEMPO REAL
+        function startZXingScanner() {
+            if (!zxingReader) {
+                zxingReader = new ZXing.BrowserMultiFormatReader();
+            }
+            lastScannedBarcode = "";
+
+            zxingReader.decodeFromVideoDevice(null, 'unifiedCameraVideo', (result, err) => {
+                if (result) {
+                    let codeText = result.getText();
+                    if (codeText !== lastScannedBarcode) {
+                        lastScannedBarcode = codeText;
+                        displayBarcodeResult(codeText);
+                    }
+                }
+            }).catch(err => console.log("Aguardando código...", err));
+            
+            speakText("Varredura de código ativada.");
+        }
+
+        function stopZXingScanner() {
+            if (zxingReader) {
+                zxingReader.reset();
+            }
+        }
+
+        function displayBarcodeResult(code) {
+            let resArea = document.getElementById('unifiedResultArea');
+            let tipo = "Código / Chave";
+
+            if (code.length === 44 && !isNaN(code)) tipo = "Boleto Bancário / Conta";
+            else if (code.length === 13 || code.length === 8) tipo = "Código de Barras EAN (Produto)";
+            else if (code.toLowerCase().includes("pix")) tipo = "Chave / QRCode Pix";
+
+            let output = `✅ **${tipo} Lido com Sucesso!**\n\n📌 **Conteúdo:**\n${code}`;
+            resArea.innerText = output;
+
+            document.getElementById('btnCopyResult').classList.remove('hidden');
+            document.getElementById('btnSpeakResult').classList.remove('hidden');
+
+            speakText(`${tipo} identificado: ${code}`);
+        }
+
+        // DISPARO MANUAL PARA IA DE OBJETOS OU OCR DE TEXTO
+        async function triggerManualCapture() {
+            let video = document.getElementById('unifiedCameraVideo');
+            let selectedMode = document.querySelector('input[name="cameraMode"]:checked').value;
+            let resArea = document.getElementById('unifiedResultArea');
+            let targetLang = document.getElementById('targetLanguage').value;
+            let ocrLang = document.getElementById('targetLanguage').options[document.getElementById('targetLanguage').selectedIndex].getAttribute('data-ocr') || 'por';
+
+            if (!video.srcObject) return alert("Ligue a câmera primeiro!");
 
             let canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+            canvas.width = video.videoWidth || 1280;
+            canvas.height = video.videoHeight || 720;
             let ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            if (selectedMode === 'ocr') {
-                // MODO 1: LER TEXTO (TESSERACT)
-                result.innerText = "⏳ Lendo os textos na imagem... Aguarde.";
-                speakText("Lendo texto do documento.");
+            if (selectedMode === 'ia_object') {
+                resArea.innerText = "⏳ A IA está analisando a imagem. Aguarde...";
+                speakText("Analisando objeto com Inteligência Artificial.");
 
                 try {
-                    const worker = await Tesseract.createWorker('por');
-                    const ret = await worker.recognize(canvas);
-                    const textoExtraido = ret.data.text.trim();
-                    await worker.terminate();
-
-                    if (textoExtraido.length > 3) {
-                        result.innerText = "📄 Texto Lido:\n" + textoExtraido;
-                        speakText("O texto lido é: " + textoExtraido);
-                    } else {
-                        result.innerText = "❌ Nenhum texto legível encontrado.";
-                        speakText("Nenhum texto encontrado.");
-                    }
-                } catch (e) {
-                    result.innerText = "Erro ao ler o texto.";
-                }
-            } else {
-                // MODO 2: IDENTIFICAR O QUE HÁ NA IMAGEM (MOBILENET)
-                result.innerText = "⏳ Identificando objetos na foto...";
-                speakText("Identificando o que está na imagem.");
-
-                try {
-                    if (!mobileNetModel) mobileNetModel = await mobilenet.load();
-                    const predictions = await mobileNetModel.classify(canvas);
+                    if (!mobileNetModel) mobileNetModel = await mobilenet.load({ version: 2, alpha: 1.0 });
+                    const predictions = await mobileNetModel.classify(canvas, 3);
 
                     if (predictions && predictions.length > 0) {
-                        let topClass = predictions[0].className;
-                        let probability = Math.round(predictions[0].probability * 100);
-                        
-                        let resText = `🔍 Identificação da Câmera:\nObjeto Detectado: ${topClass}\n(Certeza: ${probability}%)`;
-                        result.innerText = resText;
-                        speakText(`Vejo na imagem: ${topClass}.`);
+                        let topResult = predictions[0];
+                        let nameEn = topResult.className.toLowerCase();
+                        let traducao = "Objeto ou Embalagem";
+
+                        for (let key in dicionarioAvançado) {
+                            if (nameEn.includes(key)) {
+                                traducao = dicionarioAvançado[key];
+                                break;
+                            }
+                        }
+
+                        if (traducao === "Objeto ou Embalagem") {
+                            traducao = `Objeto aproximado: ${topResult.className}`;
+                        }
+
+                        let precisao = Math.round(topResult.probability * 100);
+
+                        let textoFinal = `🧠 **Identificação da IA:**\n\n` +
+                                         `• **Item Detectado:** ${traducao}\n` +
+                                         `• **Nível de Certeza:** ${precisao}%\n\n` +
+                                         `💡 *Dica: Se for um remédio ou produto com texto, altere para o modo 'Leitor de Texto / Rótulo' para ler o nome exato.*`;
+
+                        resArea.innerText = textoFinal;
+                        document.getElementById('btnCopyResult').classList.remove('hidden');
+                        document.getElementById('btnSpeakResult').classList.remove('hidden');
+
+                        speakText(`Objeto identificado: ${traducao} com ${precisao} por cento de certeza.`);
                     } else {
-                        result.innerText = "Não foi possível identificar o objeto na cena.";
-                        speakText("Objeto não reconhecido.");
+                        resArea.innerText = "Não foi possível identificar o objeto claramente. Tente aproximar ou melhorar a iluminação.";
+                        speakText("Não foi possível identificar o objeto. Tente aproximar a câmera.");
+                    }
+                } catch(err) {
+                    resArea.innerText = "Erro ao processar imagem da IA.";
+                }
+
+            } else if (selectedMode === 'ocr_text') {
+                resArea.innerText = "⏳ Lendo palavras da imagem. Aguarde...";
+                speakText("Lendo texto da embalagem ou papel.");
+
+                try {
+                    const worker = await Tesseract.createWorker(ocrLang);
+                    const ret = await worker.recognize(canvas);
+                    const txt = ret.data.text.trim();
+                    await worker.terminate();
+
+                    if (txt.length > 2) {
+                        resArea.innerText = `📄 **Texto Extraído:**\n\n"${txt}"`;
+                        document.getElementById('btnCopyResult').classList.remove('hidden');
+                        document.getElementById('btnSpeakResult').classList.remove('hidden');
+                        speakText(`Texto lido: ${txt}`);
+                    } else {
+                        resArea.innerText = "Nenhum texto claro ou legível foi encontrado na imagem. Posicione a câmera mais perto da escrita.";
+                        speakText("Nenhum texto legível encontrado.");
                     }
                 } catch(e) {
-                    result.innerText = "Erro na identificação da imagem.";
+                    resArea.innerText = "Erro ao extrair texto da imagem.";
                 }
             }
-
-            btnCapture.disabled = false;
         }
 
-        // LEITOR DE CÓDIGO DE BARRAS, QR CODE E PIX
-        function startQrScanner() {
-            stopQrScanner();
-            html5QrCode = new Html5Qrcode("reader");
-            
-            speakText("Leitor de QR Code e Código de Barras ativado.");
-            
-            html5QrCode.start(
-                { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                (decodedText, decodedResult) => {
-                    document.getElementById('qrScanResult').innerText = decodedText;
-                    document.getElementById('btnCopyQr').classList.remove('hidden');
-                    speakText("Código lido com sucesso.");
-                    stopQrScanner();
-                },
-                (errorMessage) => {}
-            ).catch(err => {
-                alert("Erro ao abrir leitor de códigos.");
-            });
+        function copyUnifiedResult() {
+            let txt = document.getElementById('unifiedResultArea').innerText;
+            navigator.clipboard.writeText(txt).then(() => speakText("Resultado copiado."));
         }
 
-        function stopQrScanner() {
-            if (html5QrCode && html5QrCode.isScanning) {
-                html5QrCode.stop().then(() => {
-                    html5QrCode.clear();
-                }).catch(err => console.error(err));
-            }
+        function speakUnifiedResult() {
+            let txt = document.getElementById('unifiedResultArea').innerText;
+            speakText(txt);
         }
 
-        function copyQrResult() {
-            let txt = document.getElementById('qrScanResult').innerText;
-            navigator.clipboard.writeText(txt).then(() => {
-                speakText("Código copiado.");
-            });
-        }
-
-        // SINTETIZADOR DE VOZ E DEMAIS FUNÇÕES
+        // SISTEMA DE VOZ DO NAVEGADOR
         function speakText(text) {
             if (!synth) return;
             synth.cancel();
 
+            let targetLang = document.getElementById('targetLanguage').value || 'pt-BR';
             let utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = targetLang;
+
             let selectedVoiceName = document.getElementById('voiceSelect').value;
             let rate = parseFloat(document.getElementById('speechRate').value || 0.9);
 
@@ -802,27 +925,28 @@
             if (txt.trim()) speakText(txt);
         }
 
-        function speakSection(title, desc) {
-            speakText(`${title}. ${desc}`);
+        function speakSection(title, desc) { speakText(`${title}. ${desc}`); }
+        function stopSpeech() { if (synth) synth.cancel(); document.getElementById('liveCaptionText').innerText = "Leitura interrompida."; }
+        function repeatLastSpeech() { if (lastSpokenText) speakText(lastSpokenText); }
+        function changeVoiceSelection() { speakText("Voz alterada."); }
+
+        function copyToClipboard() {
+            let txt = document.getElementById('customTextToSpeech').value;
+            if (!txt.trim()) return alert("Sem texto para copiar!");
+            navigator.clipboard.writeText(txt).then(() => speakText("Texto copiado."));
         }
 
-        function stopSpeech() {
-            if (synth) synth.cancel();
-            document.getElementById('liveCaptionText').innerText = "Leitura interrompida.";
-        }
-
-        function repeatLastSpeech() {
-            if (lastSpokenText) speakText(lastSpokenText);
-        }
-
-        function changeVoiceSelection() {
-            speakText("Voz alterada.");
-        }
-
-        function triggerLibras(title, description) {
-            document.getElementById('librasSignalTitle').innerText = `Sinal: ${title}`;
-            document.getElementById('librasGestureDescription').innerText = `Descrição: [${description}]`;
-            speakText(`Sinal LIBRAS para ${title}. ${description}`);
+        function downloadTextFile() {
+            let txt = document.getElementById('customTextToSpeech').value;
+            if (!txt.trim()) return alert("Sem texto para baixar!");
+            let blob = new Blob([txt], { type: "text/plain;charset=utf-8" });
+            let a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = "transcricao.txt";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            speakText("Arquivo baixado.");
         }
 
         function toggleLibrasGlobal() {
@@ -835,14 +959,14 @@
             let resultDiv = document.getElementById('analysisResult');
             resultDiv.classList.remove('hidden');
 
-            if (input.includes('pix') || input.includes('urgente') || input.includes('dinheiro') || input.includes('banco')) {
+            if (input.includes('pix') || input.includes('urgente') || input.includes('dinheiro') || input.includes('banco') || input.includes('senha')) {
                 resultDiv.className = "mt-4 p-4 rounded-xl border-2 bg-red-100 border-red-500 text-red-950 font-bold";
-                resultDiv.innerHTML = "<i class='fa-solid fa-triangle-exclamation text-2xl mr-2'></i> ALERTA DE PERIGO: Esta mensagem possui forte suspeita de golpe!";
-                speakText("Atenção! Esta mensagem tem sinais de golpe.");
+                resultDiv.innerHTML = "<i class='fa-solid fa-triangle-exclamation text-2xl mr-2'></i> ALERTA DE RISCO: Esta mensagem possui características comuns de golpe!";
+                speakText("Atenção! Esta mensagem pode ser um golpe.");
             } else {
                 resultDiv.className = "mt-4 p-4 rounded-xl border-2 bg-emerald-100 border-emerald-500 text-emerald-950 font-bold";
                 resultDiv.innerHTML = "<i class='fa-solid fa-circle-check text-2xl mr-2'></i> Mensagem Aparentemente Segura.";
-                speakText("Mensagem sem sinais óbvios de golpe.");
+                speakText("Nenhum termo suspeito encontrado na mensagem.");
             }
         }
 
@@ -859,18 +983,9 @@
             if (size === 'xlarge') body.classList.add('font-text-xlarge');
         }
 
-        function toggleContrast() {
-            document.body.classList.toggle('high-contrast');
-        }
-
-        function openHelpModal() {
-            document.getElementById('helpModal').classList.remove('hidden');
-            speakText("Modo SOS Ativado.");
-        }
-
-        function closeHelpModal() {
-            document.getElementById('helpModal').classList.add('hidden');
-        }
+        function toggleContrast() { document.body.classList.toggle('high-contrast'); }
+        function openHelpModal() { document.getElementById('helpModal').classList.remove('hidden'); speakText("Ajuda e SOS ativado."); }
+        function closeHelpModal() { document.getElementById('helpModal').classList.add('hidden'); }
 
         function trackDwell(sectionName) {
             if (currentSection === sectionName) return;
