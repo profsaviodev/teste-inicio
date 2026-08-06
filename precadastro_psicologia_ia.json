@@ -1,0 +1,20 @@
+[
+    {
+        "perfil": "TEA",
+        "diretriz": "Minimizar estímulos visuais periféricos e garantir previsibilidade.",
+        "jogos_recomendados": "Memória e Quebra-Cabeça de Cores",
+        "analise_ia": "A IA indica que indivíduos com TEA se beneficiam de lógicas baseadas em padrões (como o Quebra-Cabeça). Alterações súbitas no Kiosk Mode podem gerar estresse, o aviso de evasão deve ser tratado pedagogicamente."
+    },
+    {
+        "perfil": "TDAH",
+        "diretriz": "Ciclos curtos de tarefa (Pomodoro) e feedback imediato de gamificação.",
+        "jogos_recomendados": "Teste de Reação",
+        "analise_ia": "O algoritmo LLM cruza evasões do Kiosk Mode com fadiga atencional. Se as evasões aumentam no nível > 50, a medicação ou o formato de ensino requerem ajuste tático biomecânico."
+    },
+    {
+        "perfil": "AHSD",
+        "diretriz": "Incremento rápido de complexidade, evitar repetição exaustiva sem progressão.",
+        "jogos_recomendados": "Quebra-Cabeça Dinâmico Avançado",
+        "analise_ia": "A IA sugere que o desinteresse manifestado pela quebra de foco no Kiosk Mode não reflete dificuldade, mas subestimulação. Aumentar os níveis procedurais rapidamente é mandatório."
+    }
+]

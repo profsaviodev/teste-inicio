@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Savio SPA BioLogics - Segurança Máxima</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- VLibras e Gráficos -->
+    <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- TensorFlow.js Visão Computacional -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+</head>
+<body>
+    <!-- TELA DE BLOQUEIO (KIOSK MODE / ANTI-EVASÃO) -->
+    <div id="tela-bloqueio" style="display: none;">
+        <div class="bloqueio-card">
+            <h1>⚠️ ATENÇÃO: EVASÃO DE FOCO DETECTADA ⚠️</h1>
+            <p>O aluno tentou sair do ambiente controlado.</p>
+            <p style="color: yellow; font-weight: bold;">Um alerta foi enviado ao responsável via SMS/Email.</p>
+            <input type="password" id="senha-prof" placeholder="Senha do Professor para Desbloquear">
+            <button onclick="desbloquearTela()" class="btn-primario mt-15">Desbloquear Sistema</button>
+        </div>
+    </div>
+
+    <!-- WIDGET VLIBRAS -->
+    <div vw class="enabled"><div vw-access-button class="active"></div><div vw-plugin-wrapper><div class="vw-plugin-top-wrapper"></div></div></div>
+
+    <nav class="menu-lateral no-print">
+        <div class="logo-menu"><h2>BioLogics</h2><p>SPA Inclusão</p></div>
+        <ul>
+            <li><a href="#" onclick="mostrarAba('aba-cadastro')">👤 Anamnese & Kiosk</a></li>
+            <li><a href="#" onclick="mostrarAba('aba-jogos')">🎮 Engine Cognitiva</a></li>
+            <li><a href="#" onclick="mostrarAba('aba-acessibilidade')">🗣️ Áudio, Libras & IA Visual</a></li>
+            <li><a href="#" onclick="mostrarAba('aba-relatorio')">🧠 Relatório LLM</a></li>
+            <li><a href="#" onclick="mostrarAba('aba-config')">⚙️ Base de Dados e Mapas</a></li>
+        </ul>
+    </nav>
+
+    <main class="conteudo-principal">
+        <header class="topo-sistema no-print">
+            <h1>Central de Inteligência Savio SPA BioLogics</h1>
+            <div class="status-barra">
+                <span id="status-foco" class="badge-verde">Rastreamento de Foco Ativo</span>
+                <span id="status-mic" class="badge-inativo">Microfone Desligado</span>
+            </div>
+        </header>
+
+        <!-- ACESSIBILIDADE E VISÃO COMPUTACIONAL -->
+        <section id="aba-acessibilidade" class="aba-conteudo">
+            <div class="dashboard-grid">
+                <div class="modulo-card">
+                    <h2>🗣️ Tradução Simultânea e VLibras</h2>
+                    <p>Ao ditar, o texto aparece abaixo. O VLibras embutido traduzirá automaticamente a tela.</p>
+                    <div class="controles-voz mt-15 mb-15">
+                        <select id="idioma-reconhecimento">
+                            <option value="pt-BR">Português (Brasil)</option>
+                            <option value="en-US">English (US)</option>
+                        </select>
+                        <button onclick="processarComando('iniciar')" class="btn-primario">▶️ Iniciar Mic</button>
+                        <button onclick="processarComando('parar')" class="btn-secundario">⏹️ Parar</button>
+                        <button onclick="processarComando('gravar')" class="btn-alerta">💾 Gravar</button>
+                    </div>
+                    <div id="caixa-legendas" class="caixa-legenda" title="Clique duas vezes na palavra para o VLibras ler">Aguardando áudio...</div>
+                </div>
+
+                <div class="modulo-card">
+                    <h2>👁️ Visão Computacional (Leitor de Objetos)</h2>
+                    <p>⚠️ Para funcionar, não use o protocolo "file://". Abra via <b>Live Server</b>.</p>
+                    <div style="position: relative; max-width: 100%; background: #000; min-height: 200px; border-radius:8px;">
+                        <video id="video-ia" autoplay muted playsinline style="width: 100%; border-radius: 8px;"></video>
+                        <canvas id="canvas-ia" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></canvas>
+                    </div>
+                    <button onclick="iniciarVisaoComputacional()" class="btn-primario mt-15">Ativar IA da Câmera</button>
+                    <p id="texto-objetos-detectados" class="mt-15" style="font-weight: bold; color: var(--alerta);"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ENGINE DE JOGOS E GAMIFICAÇÃO -->
+        <section id="aba-jogos" class="aba-conteudo">
+            <div class="modulo-card">
+                <h2>🎮 Engine Procedural e Metas</h2>
+                <div class="linha-inputs mb-15">
+                    <select id="seletor-jogo">
+                        <option value="memoria">Memória de Trabalho</option>
+                        <option value="reacao">Controle de Reação</option>
+                        <option value="quebra-cabeca">Quebra-Cabeça (Cores/Lógica)</option>
+                    </select>
+                    <input type="number" id="nivel-jogo" min="1" max="100" value="1" placeholder="Nível (1-100)">
+                    <button onclick="iniciarEngineJogo()" class="btn-primario">Carregar Jogo</button>
+                </div>
+                
+                <div id="area-jogo-dinamico" class="container-jogo">
+                    <p class="instrucao">Selecione o nível e o jogo. O sistema ajustará a dificuldade automaticamente.</p>
+                </div>
+                
+                <div class="mt-15">
+                    <h3>🏆 Painel de Gamificação e Metas Alcançadas</h3>
+                    <div id="lista-metas-gamificacao" class="lista-dados"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CADASTRO E ANAMNESE -->
+        <section id="aba-cadastro" class="aba-conteudo ativa">
+            <div class="modulo-card">
+                <h2>👤 Anamnese e Kiosk Mode</h2>
+                <p>O Kiosk Mode (monitoramento de evasão de tela) está <b>ATIVO</b> por padrão. Se o usuário trocar de aba, a tela será bloqueada.</p>
+                <form id="form-perfil">
+                    <input type="text" id="nome-aluno" placeholder="Nome do Paciente/Aluno" required>
+                    <select id="perfil-aluno">
+                        <option value="Neurotipico">Desenvolvimento Padrão</option>
+                        <option value="TEA">Transtorno do Espectro Autista (TEA)</option>
+                        <option value="TDAH">TDAH</option>
+                        <option value="AHSD">Altas Habilidades (AH/SD)</option>
+                    </select>
+                    <button type="submit" class="btn-primario mt-15">Registrar e Iniciar Sessão</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- CONFIGURAÇÕES, DADOS E MAPAS -->
+        <section id="aba-config" class="aba-conteudo">
+             <div class="dashboard-grid">
+                <div class="modulo-card">
+                    <h2>📥 Fontes de Dados e Pré-Cadastros</h2>
+                    <p>O sistema cruza dados com os laudos para alimentar o relatório da IA.</p>
+                    <ul style="margin-bottom: 15px;">
+                        <li><a href="http://portal.mec.gov.br/ldb" target="_blank">Fonte LDB Oficial (MEC)</a></li>
+                        <li><a href="http://basenacionalcomum.mec.gov.br/" target="_blank">Fonte BNCC Oficial</a></li>
+                    </ul>
+                    <input type="file" id="arquivo-import-db" accept=".json">
+                    <button onclick="importarDatabase()" class="btn-primario mt-15">Importar Base JSON (Pré-cadastro)</button>
+                    <div id="status-db" class="mt-15"></div>
+                </div>
+                <div class="modulo-card">
+                    <h2>📍 Geolocalização e Segurança (Maps)</h2>
+                    <p>Monitoramento de posição da sessão ativa.</p>
+                    <button onclick="carregarMapa()" class="btn-secundario mb-15">Pegar Localização Atual</button>
+                    <iframe id="mapa-frame" width="100%" height="200" style="border:none; border-radius: 8px; background:#e2e8f0;"></iframe>
+                </div>
+             </div>
+        </section>
+
+        <!-- RELATÓRIO IA LLM -->
+        <section id="aba-relatorio" class="aba-conteudo">
+            <div class="modulo-card">
+                <h2>🧠 Relatório Analítico (Gerado por Algoritmo/LLM)</h2>
+                <button onclick="gerarRelatorioIA()" class="btn-primario mb-15">Gerar Análise Psicológica</button>
+                <textarea id="box-relatorio" style="height: 400px; font-family: monospace; line-height: 1.5;"></textarea>
+                <div class="linha-inputs mt-15">
+                    <button onclick="window.print()" class="btn-icone">🖨️ Imprimir Laudo</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
