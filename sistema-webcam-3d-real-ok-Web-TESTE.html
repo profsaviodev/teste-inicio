@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Savio SPA BioLogics - Suíte Completa com RA Universal & Atividades</title>
+    <!-- Model Viewer para 3D universal e RA nativa / fallback web -->
+    <script type="module" src="https://unpkg.com/@model-viewer/public@v3.4.0/dist/model-viewer.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --panel-bg: #1e293b;
+            --text-color: #f8fafc;
+            --primary: #818cf8;
+            --accent: #34d399;
+            --danger: #f87171;
+            --border-radius: 14px;
+        }
+
+        body.tema-claro {
+            --bg-color: #f1f5f9;
+            --panel-bg: #ffffff;
+            --text-color: #1e293b;
+            --primary: #4f46e5;
+            --accent: #10b981;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+            box-sizing: border-box;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        header h1 {
+            font-size: 1.2rem;
+            margin: 0 0 2px 0;
+            color: var(--primary);
+        }
+
+        header p {
+            font-size: 0.75rem;
+            margin: 0;
+            opacity: 0.7;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 260px 1fr 260px;
+            gap: 10px;
+            max-width: 1250px;
+            width: 100%;
+        }
+
+        @media (max-width: 1000px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            padding: 12px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+        }
+
+        .panel h3 {
+            margin-top: 0;
+            font-size: 0.88rem;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 4px;
+        }
+
+        .control-group {
+            margin-bottom: 8px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 0.74rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .control-group select, .control-group button {
+            width: 100%;
+            padding: 6px;
+            border-radius: 6px;
+            border: 1px solid #475569;
+            background: var(--panel-bg);
+            color: var(--text-color);
+            box-sizing: border-box;
+            font-size: 0.78rem;
+        }
+
+        .btn-acao {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+            margin-top: 4px;
+        }
+
+        .btn-acao:hover {
+            opacity: 0.9;
+        }
+
+        .center-stage {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .stage-wrapper {
+            position: relative;
+            width: 100%;
+            height: 380px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas {
+            display: block;
+            touch-action: none;
+            cursor: pointer;
+        }
+
+        model-viewer {
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+        }
+
+        .tray-container {
+            width: 100%;
+            height: 85px;
+            background: rgba(0,0,0,0.02);
+            border-radius: 8px;
+            margin-top: 8px;
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding: 6px;
+            box-sizing: border-box;
+            align-items: center;
+        }
+
+        .status-msg {
+            margin-top: 6px;
+            font-weight: bold;
+            font-size: 0.78rem;
+            color: var(--accent);
+            text-align: center;
+            min-height: 20px;
+        }
+
+        .webcam-preview {
+            width: 100%;
+            height: 100px;
+            background: #000;
+            border-radius: 8px;
+            margin-top: 8px;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+
+        .telemetry-card {
+            background: rgba(0,0,0,0.03);
+            padding: 6px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 0.74rem;
+        }
+
+        .telemetry-card span {
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            background: #cbd5e1;
+            border-radius: 4px;
+            height: 5px;
+            margin-top: 2px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 100%;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body class="tema-escuro">
+
+<header>
+    <h1>Savio SPA BioLogics — Suíte Clínica, Jogos & RA Universal</h1>
+    <p>Dispositivo Implantável, IA Cognitiva & Realidade Aumentada Multiplataforma</p>
+</header>
+
+<div class="main-grid">
+    <!-- PAINEL ESQUERDO: CONFIGURAÇÕES E MODULAÇÃO -->
+    <div class="panel">
+        <h3>Painel de Adaptação</h3>
+        
+        <div class="control-group">
+            <label for="selectModulo">Módulo Ativo:</label>
+            <select id="selectModulo" onchange="mudarModulo()">
+                <option value="quebraCabeca">1. Quebra-Cabeça Geométrico</option>
+                <option value="cacaAlvo">2. Caça ao Alvo (Foco/TDAH)</option>
+                <option value="sequencia">3. Memória Sensorial (TEA)</option>
+                <option value="associacaoPalavras">4. Associação Vocabular</option>
+                <option value="labirintoFoco">5. Labirinto Motor Fino</option>
+                <option value="modelo3dAR">6. Visualizador 3D & RA Universal</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="selectPerfil">Perfil Terapêutico:</label>
+            <select id="selectPerfil" onchange="aplicarPerfil()">
+                <option value="padrao">Padrão / Geral</option>
+                <option value="tea">TEA (Estímulo Calmo & Visual)</option>
+                <option value="tdah">TDAH (Reflexo & Velocidade)</option>
+                <option value="altasHabilidades">Altas Habilidades (Desafio)</option>
+            </select>
+        </div>
+
+        <div class="control-group" id="grupoOpcoesExtras">
+            <label for="selectOpcaoExtra">Variante de Estímulo:</label>
+            <select id="selectOpcaoExtra" onchange="reiniciarModulo()">
+                <option value="paisagem">Paisagem Natural / Geral</option>
+                <option value="geometrico">Geometria Avançada</option>
+                <option value="biomedico">Biomédico & Estrutural</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="checkTema">Modo de Exibição:</label>
+            <select id="checkTema" onchange="mudarTema()">
+                <option value="escuro">Modo Escuro (Anti-Brilho)</option>
+                <option value="claro">Modo Claro (Padrão)</option>
+            </select>
+        </div>
+
+        <button class="btn-acao" style="padding: 7px;" onclick="reiniciarModulo()">Reiniciar Módulo</button>
+        <button class="btn-acao" style="background-color: var(--accent); margin-top: 6px; padding: 7px;" onclick="baixarHTMLCompleto()">📥 Baixar Arquivo Completo</button>
+    </div>
+
+    <!-- CENTRO: PALCO DA ATIVIDADE OU RA UNIVERSAL -->
+    <div class="panel center-stage">
+        <div class="stage-wrapper" id="stageWrapper">
+            <!-- Canvas para Atividades 2D -->
+            <canvas id="mainCanvas" width="400" height="380"></canvas>
+            
+            <!-- Componente Universal de Model-Viewer / RA (Oculto inicialmente para os jogos 2D) -->
+            <model-viewer id="modeloAR" 
+                          src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
+                          ios-src=""
+                          alt="Savio SPA BioLogics RA Model"
+                          ar
+                          ar-modes="scene-viewer quick-look webxr"
+                          camera-controls
+                          auto-rotate
+                          shadow-intensity="1"
+                          style="display: none; width: 100%; height: 100%;">
+                
+                <button slot="ar-button" style="background: var(--accent); color: #0b0f19; border: none; border-radius: 20px; padding: 10px 20px; font-weight: bold; position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                    📱 Projetar no Mundo Real (RA Universal)
+                </button>
+            </model-viewer>
+        </div>
+        <div class="status-msg" id="statusMsg">Carregando suíte inteligente...</div>
+        <div class="tray-container" id="trayContainer" style="display: none;"></div>
+    </div>
+
+    <!-- PAINEL DIREITO: BIOMETRIA, CÂMERA & TELEMETRIA -->
+    <div class="panel">
+        <h3>Telemetria & Câmera IA</h3>
+        <video id="webcamVideo" class="webcam-preview" autoplay playsinline muted></video>
+        
+        <div class="telemetry-card" style="margin-top: 8px;">
+            <div>Índice de Atenção Global:</div>
+            <span id="txtFoco">90%</span>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="barFoco" style="width: 90%;"></div>
+            </div>
+        </div>
+
+        <div class="telemetry-card">
+            <div>Erros / Desvios Focais:</div>
+            <span id="txtErros">0</span>
+        </div>
+
+        <button class="btn-acao" style="background-color: var(--accent); margin-top: 8px; padding: 7px;" onclick="exportarRelatorioClínico()">Gerar Parecer Clínico (IA)</button>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d');
+    const statusMsg = document.getElementById('statusMsg');
+    const tray = document.getElementById('trayContainer');
+    const videoElement = document.getElementById('webcamVideo');
+    const modelViewer = document.getElementById('modeloAR');
+
+    let moduloAtivo = 'quebraCabeca';
+    let acertos = 0;
+    let erros = 0;
+    let nivelFoco = 90;
+
+    // Quebra-Cabeça
+    let gridSize = 3;
+    let tileSize = 380 / gridSize;
+    let pieces = [];
+    let pecaArrastada = null;
+    let imagemFundoCanvas = null;
+
+    // Caça ao Alvo
+    let alvoX = 200, alvoY = 190, alvoRaio = 32;
+    let alvoAtivo = false;
+    let timerAlvo = null;
+
+    // Sequência Sensorial
+    let sequenciaAlvo = [], sequenciaUsuario = [], blocoPulsando = -1;
+    let coresSeq = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b'];
+
+    // Associação de Palavras
+    let listaVocabulario = [
+        { pt: "Coração", en: "Heart", options: ["Heart", "Lung", "Brain", "Cell"] },
+        { pt: "Célula", en: "Cell", options: ["Blood", "Cell", "Tissue", "Bone"] },
+        { pt: "Oxigênio", en: "Oxygen", options: ["Oxygen", "Carbon", "Water", "Nitrogen"] },
+        { pt: "Implante", en: "Implant", options: ["Device", "Implant", "Sensor", "Valve"] }
+    ];
+    let vocabAtual = 0;
+
+    // Labirinto Foco
+    let labPos = {x: 30, y: 30};
+    let labMeta = {x: 350, y: 350, r: 18};
+    let obstaculosLab = [
+        {x: 100, y: 0, w: 25, h: 260},
+        {x: 220, y: 120, w: 25, h: 260}
+    ];
+
+    async function iniciarWebcamIA() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } });
+            videoElement.srcObject = stream;
+        } catch (err) {
+            console.log("Câmera indisponível.");
+        }
+    }
+
+    function mudarModulo() {
+        moduloAtivo = document.getElementById('selectModulo').value;
+        const grupoExtras = document.getElementById('grupoOpcoesExtras');
+        clearInterval(timerAlvo);
+
+        if (moduloAtivo === 'modelo3dAR') {
+            canvas.style.display = 'none';
+            modelViewer.style.display = 'block';
+            tray.style.display = 'none';
+            grupoExtras.style.display = 'block';
+            grupoExtras.querySelector('label').innerText = "Ativo 3D / RA:";
+            grupoExtras.innerHTML = `
+                <label for="selectModelo3D">Ativo 3D / RA:</label>
+                <select id="selectModelo3D" onchange="trocarModelo3D()">
+                    <option value="implante">1. Dispositivo Implantável (Savio SPA)</option>
+                    <option value="neuronio">2. Matriz Neural & Sensores</option>
+                    <option value="motor">3. Microcomponente Cardiovascular</option>
+                </select>
+            `;
+            statusMsg.innerText = "Modo 3D & Realidade Aumentada Universal ativo.";
+            return;
+        } else {
+            canvas.style.display = 'block';
+            modelViewer.style.display = 'none';
+        }
+
+        grupoExtras.style.display = 'block';
+        grupoExtras.innerHTML = `
+            <label for="selectOpcaoExtra">Variante de Estímulo:</label>
+            <select id="selectOpcaoExtra" onchange="reiniciarModulo()">
+                <option value="paisagem">Paisagem Natural / Geral</option>
+                <option value="geometrico">Geometria Avançada</option>
+                <option value="biomedico">Biomédico & Estrutural</option>
+            </select>
+        `;
+
+        if (moduloAtivo === 'quebraCabeca') {
+            tray.style.display = 'flex';
+        } else {
+            tray.style.display = 'none';
+        }
+        reiniciarModulo();
+    }
+
+    function trocarModelo3D() {
+        const val = document.getElementById('selectModelo3D').value;
+        if (val === 'implante') {
+            modelViewer.setAttribute('src', 'https://modelviewer.dev/shared-assets/models/Astronaut.glb');
+        } else if (val === 'neuronio') {
+            modelViewer.setAttribute('src', 'https://modelviewer.dev/shared-assets/models/RobotExpressive.glb');
+        } else if (val === 'motor') {
+            modelViewer.setAttribute('src', 'https://modelviewer.dev/shared-assets/models/NeilArmstrong.glb');
+        }
+    }
+
+    function reiniciarModulo() {
+        acertos = 0;
+        erros = 0;
+        clearInterval(timerAlvo);
+
+        if (moduloAtivo === 'quebraCabeca') {
+            statusMsg.innerText = "Encaixe as peças nos devidos lugares.";
+            iniciarQuebraCabeca();
+        } else if (moduloAtivo === 'cacaAlvo') {
+            statusMsg.innerText = "Clique rapidamente nos alvos que surgirem!";
+            iniciarCacaAlvo();
+        } else if (moduloAtivo === 'sequencia') {
+            statusMsg.innerText = "Observe e repita a sequência sensorial.";
+            iniciarSequencia();
+        } else if (moduloAtivo === 'associacaoPalavras') {
+            vocabAtual = 0;
+            statusMsg.innerText = "Selecione a tradução correta.";
+            renderizarAssociacao();
+        } else if (moduloAtivo === 'labirintoFoco') {
+            labPos = {x: 30, y: 30};
+            statusMsg.innerText = "Guie o indicador até a meta sem tocar nas barreiras.";
+            renderizarLabirinto();
+        }
+        atualizarMetricasUI();
+    }
+
+    /* 1. QUEBRA-CABEÇA */
+    function criarBackgroundQC() {
+        const off = document.createElement('canvas');
+        off.width = 400; off.height = 380;
+        const oCtx = off.getContext('2d');
+        const tipo = document.getElementById('selectOpcaoExtra')?.value || 'paisagem';
+
+        if (tipo === 'paisagem') {
+            oCtx.fillStyle = '#38bdf8'; oCtx.fillRect(0,0,400,220);
+            oCtx.fillStyle = '#fde047'; oCtx.beginPath(); oCtx.arc(320, 60, 30, 0, Math.PI*2); oCtx.fill();
+            oCtx.fillStyle = '#047857'; oCtx.beginPath(); oCtx.moveTo(0,220); oCtx.lineTo(160,100); oCtx.lineTo(320,220); oCtx.fill();
+            oCtx.fillStyle = '#10b981'; oCtx.fillRect(0, 220, 400, 160);
+        } else if (tipo === 'geometrico') {
+            oCtx.fillStyle = '#4f46e5'; oCtx.fillRect(0,0,400,380);
+            oCtx.fillStyle = '#f43f5e'; oCtx.beginPath(); oCtx.arc(200, 190, 95, 0, Math.PI*2); oCtx.fill();
+            oCtx.fillStyle = '#fbbf24'; oCtx.fillRect(110, 100, 180, 180);
+        } else {
+            oCtx.fillStyle = '#0f172a'; oCtx.fillRect(0,0,400,380);
+            oCtx.fillStyle = '#38bdf8'; oCtx.beginPath(); oCtx.arc(200, 190, 80, 0, Math.PI*2); oCtx.fill();
+            oCtx.fillStyle = '#10b981'; oCtx.fillRect(150, 40, 100, 300);
+        }
+        imagemFundoCanvas = off;
+    }
+
+    function iniciarQuebraCabeca() {
+        gridSize = 3;
+        tileSize = 380 / gridSize;
+        criarBackgroundQC();
+        pieces = [];
+        tray.innerHTML = '';
+        let id = 0;
+        for (let r = 0; r < gridSize; r++) {
+            for (let c = 0; c < gridSize; c++) {
+                pieces.push({
+                    id: id++, correctX: c * tileSize, correctY: r * tileSize,
+                    currentX: Math.random() * 300, currentY: 400,
+                    col: c, row: r, isPlaced: false
+                });
+            }
+        }
+        pieces.sort(() => Math.random() - 0.5);
+        renderizarTabuleiroQC();
+        renderizarBandejaQC();
+    }
+
+    function renderizarTabuleiroQC() {
+        ctx.clearRect(0,0,400,380);
+        pieces.forEach(p => {
+            if (p.isPlaced) desenharFatiaQC(p, p.correctX, p.correctY, false);
+        });
+        pieces.forEach(p => {
+            if (!p.isPlaced && p.currentY < 380) desenharFatiaQC(p, p.currentX, p.currentY, true);
+        });
+    }
+
+    function desenharFatiaQC(p, x, y, sombra) {
+        ctx.save();
+        if (sombra) { ctx.shadowColor = 'rgba(0,0,0,0.2)'; ctx.shadowBlur = 4; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; }
+        ctx.beginPath(); ctx.rect(x, y, tileSize, tileSize); ctx.clip();
+        ctx.drawImage(imagemFundoCanvas, p.col * tileSize, p.row * tileSize, tileSize, tileSize, x, y, tileSize, tileSize);
+        ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 2; ctx.strokeRect(x, y, tileSize, tileSize);
+        ctx.restore();
+    }
+
+    function renderizarBandejaQC() {
+        tray.innerHTML = '';
+        pieces.forEach(p => {
+            if (!p.isPlaced && p.currentY >= 380) {
+                const pc = document.createElement('canvas');
+                pc.width = 65; pc.height = 65;
+                pc.style.width = '55px'; pc.style.height = '55px'; pc.style.borderRadius = '6px'; pc.style.cursor = 'grab';
+                const pCtx = pc.getContext('2d');
+                pCtx.drawImage(imagemFundoCanvas, p.col * tileSize, p.row * tileSize, tileSize, tileSize, 0, 0, 65, 65);
+                pc.onmousedown = (e) => iniciarArrastoQC(e, p);
+                pc.ontouchstart = (e) => iniciarArrastoQC(e, p);
+                tray.appendChild(pc);
+            }
+        });
+    }
+
+    function iniciarArrastoQC(e, p) {
+        if (p.isPlaced) return;
+        pecaArrastada = p;
+        window.onmousemove = (ev) => moverQC(ev);
+        window.onmouseup = () => soltarQC();
+        window.ontouchmove = (ev) => moverQC(ev);
+        window.ontouchend = () => soltarQC();
+    }
+
+    function moverQC(e) {
+        if (!pecaArrastada) return;
+        let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const rect = canvas.getBoundingClientRect();
+        pecaArrastada.currentX = clientX - rect.left - (tileSize/2);
+        pecaArrastada.currentY = clientY - rect.top - (tileSize/2);
+        renderizarTabuleiroQC();
+    }
+
+    function soltarQC() {
+        if (!pecaArrastada) return;
+        let dist = Math.hypot(pecaArrastada.currentX - pecaArrastada.correctX, pecaArrastada.currentY - pecaArrastada.correctY);
+        if (dist < 30) {
+            pecaArrastada.currentX = pecaArrastada.correctX;
+            pecaArrastada.currentY = pecaArrastada.correctY;
+            pecaArrastada.isPlaced = true;
+            acertos++;
+            nivelFoco = Math.min(100, nivelFoco + 2);
+            statusMsg.innerText = "Encaixe correto!";
+            if (pieces.every(p => p.isPlaced)) statusMsg.innerText = "🎉 Módulo Concluído!";
+        } else {
+            erros++;
+            nivelFoco = Math.max(20, nivelFoco - 4);
+        }
+        pecaArrastada = null;
+        renderizarTabuleiroQC();
+        renderizarBandejaQC();
+        atualizarMetricasUI();
+        window.onmousemove = null; window.onmouseup = null; window.ontouchmove = null; window.ontouchend = null;
+    }
+
+    /* 2. CAÇA AO ALVO */
+    function iniciarCacaAlvo() {
+        alvoAtivo = true;
+        mudarPosicaoAlvo();
+        timerAlvo = setInterval(() => {
+            if (alvoAtivo) { erros++; nivelFoco = Math.max(30, nivelFoco - 5); }
+            mudarPosicaoAlvo();
+            alvoAtivo = true;
+            renderizarCacaAlvo();
+            atualizarMetricasUI();
+        }, 1200);
+    }
+
+    function mudarPosicaoAlvo() {
+        alvoX = 40 + Math.random() * 320;
+        alvoY = 40 + Math.random() * 300;
+    }
+
+    function renderizarCacaAlvo() {
+        ctx.clearRect(0,0,400,380);
+        ctx.fillStyle = '#0f172a'; ctx.fillRect(0,0,400,380);
+        if (alvoAtivo) {
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath(); ctx.arc(alvoX, alvoY, alvoRaio, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(alvoX, alvoY, alvoRaio * 0.4, 0, Math.PI*2); ctx.fill();
+        }
+    }
+
+    /* 3. SEQUÊNCIA SENSORIAL */
+    function iniciarSequencia() {
+        sequenciaAlvo = [Math.floor(Math.random()*4), Math.floor(Math.random()*4), Math.floor(Math.random()*4)];
+        sequenciaUsuario = [];
+        reproduzirSequencia();
+    }
+
+    function reproduzirSequencia() {
+        let i = 0;
+        statusMsg.innerText = "Observe a sequência sensorial...";
+        let inter = setInterval(() => {
+            blocoPulsando = sequenciaAlvo[i];
+            renderizarSeqCanvas();
+            setTimeout(() => { blocoPulsando = -1; renderizarSeqCanvas(); }, 350);
+            i++;
+            if (i >= sequenciaAlvo.length) {
+                clearInterval(inter);
+                statusMsg.innerText = "Sua vez! Reproduza a sequência.";
+            }
+        }, 850);
+    }
+
+    function renderizarSeqCanvas() {
+        ctx.clearRect(0,0,400,380);
+        let pos = [{x:10,y:10},{x:205,y:10},{x:10,y:195},{x:205,y:195}];
+        pos.forEach((p, idx) => {
+            ctx.fillStyle = coresSeq[idx];
+            ctx.globalAlpha = (blocoPulsando === idx) ? 1.0 : 0.4;
+            ctx.fillRect(p.x, p.y, 185, 175);
+            ctx.globalAlpha = 1.0;
+        });
+    }
+
+    /* 4. ASSOCIAÇÃO VOCABULAR */
+    function renderizarAssociacao() {
+        ctx.clearRect(0,0,400,380);
+        ctx.fillStyle = '#0f172a'; ctx.fillRect(0,0,400,380);
+        let item = listaVocabulario[vocabAtual];
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = 'bold 20px Segoe UI';
+        ctx.textAlign = 'center';
+        ctx.fillText(`Tradução para: "${item.pt}"`, 200, 50);
+
+        item.options.forEach((opt, idx) => {
+            let bx = 50, by = 90 + (idx * 65);
+            ctx.fillStyle = '#4f46e5';
+            ctx.fillRect(bx, by, 300, 45);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '16px Segoe UI';
+            ctx.fillText(opt, 200, by + 28);
+        });
+    }
+
+    /* 5. LABIRINTO FOCO */
+    function renderizarLabirinto() {
+        ctx.clearRect(0,0,400,380);
+        ctx.fillStyle = '#0f172a'; ctx.fillRect(0,0,400,380);
+        
+        ctx.fillStyle = '#10b981';
+        ctx.beginPath(); ctx.arc(labMeta.x, labMeta.y, labMeta.r, 0, Math.PI*2); ctx.fill();
+
+        ctx.fillStyle = '#64748b';
+        obstaculosLab.forEach(o => {
+            ctx.fillRect(o.x, o.y, o.w, o.h);
+        });
+
+        ctx.fillStyle = '#818cf8';
+        ctx.beginPath(); ctx.arc(labPos.x, labPos.y, 10, 0, Math.PI*2); ctx.fill();
+    }
+
+    /* CLIQUES DO PALCO */
+    canvas.onclick = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        let y = e.clientY - rect.top;
+
+        if (moduloAtivo === 'cacaAlvo' && alvoAtivo) {
+            let dist = Math.hypot(x - alvoX, y - alvoY);
+            if (dist <= alvoRaio) {
+                acertos++;
+                nivelFoco = Math.min(100, nivelFoco + 3);
+                alvoAtivo = false;
+                statusMsg.innerText = "Alvo atingido!";
+                atualizarMetricasUI();
+            }
+        } else if (moduloAtivo === 'sequencia') {
+            let idx = -1;
+            if (x < 200 && y < 190) idx = 0;
+            if (x >= 200 && y < 190) idx = 1;
+            if (x < 200 && y >= 190) idx = 2;
+            if (x >= 200 && y >= 190) idx = 3;
+
+            if (idx !== -1) {
+                sequenciaUsuario.push(idx);
+                let pAtual = sequenciaUsuario.length - 1;
+                if (sequenciaUsuario[pAtual] === sequenciaAlvo[pAtual]) {
+                    if (sequenciaUsuario.length === sequenciaAlvo.length) {
+                        acertos++;
+                        statusMsg.innerText = "🎉 Sequência memorizada!";
+                        setTimeout(iniciarSequencia, 1000);
+                    }
+                } else {
+                    erros++;
+                    nivelFoco = Math.max(20, nivelFoco - 5);
+                    statusMsg.innerText = "❌ Erro. Reiniciando sequência.";
+                    setTimeout(iniciarSequencia, 1000);
+                }
+                atualizarMetricasUI();
+            }
+        } else if (moduloAtivo === 'associacaoPalavras') {
+            let item = listaVocabulario[vocabAtual];
+            item.options.forEach((opt, idx) => {
+                let bx = 50, by = 90 + (idx * 65);
+                if (x >= bx && x <= bx + 300 && y >= by && y <= by + 45) {
+                    if (opt === item.en) {
+                        acertos++;
+                        vocabAtual = (vocabAtual + 1) % listaVocabulario.length;
+                        statusMsg.innerText = "✅ Correto!";
+                    } else {
+                        erros++;
+                        nivelFoco = Math.max(20, nivelFoco - 4);
+                        statusMsg.innerText = "❌ Incorreto.";
+                    }
+                    renderizarAssociacao();
+                    atualizarMetricasUI();
+                }
+            });
+        }
+    };
+
+    canvas.onmousemove = (e) => {
+        if (moduloAtivo !== 'labirintoFoco') return;
+        const rect = canvas.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        let y = e.clientY - rect.top;
+
+        let colidiu = false;
+        obstaculosLab.forEach(o => {
+            if (x > o.x && x < o.x + o.w && y > o.y && y < o.y + o.h) colidiu = true;
+        });
+
+        if (colidiu) {
+            erros++;
+            nivelFoco = Math.max(20, nivelFoco - 3);
+            statusMsg.innerText = "⚠️ Colisão! Retornando.";
+            labPos = {x: 30, y: 30};
+        } else {
+            labPos = {x, y};
+            if (Math.hypot(x - labMeta.x, y - labMeta.y) < labMeta.r) {
+                acertos++;
+                statusMsg.innerText = "🎉 Meta alcançada!";
+                labPos = {x: 30, y: 30};
+            }
+        }
+        renderizarLabirinto();
+        atualizarMetricasUI();
+    };
+
+    function atualizarMetricasUI() {
+        document.getElementById('txtFoco').innerText = nivelFoco + '%';
+        document.getElementById('barFoco').style.width = nivelFoco + '%';
+        document.getElementById('txtErros').innerText = erros;
+    }
+
+    function aplicarPerfil() {
+        const p = document.getElementById('selectPerfil').value;
+        if (p === 'tea') document.getElementById('selectModulo').value = 'sequencia';
+        else if (p === 'tdah') document.getElementById('selectModulo').value = 'cacaAlvo';
+        else if (p === 'altasHabilidades') document.getElementById('selectModulo').value = 'labirintoFoco';
+        mudarModulo();
+    }
+
+    function mudarTema() {
+        const tema = document.getElementById('checkTema').value;
+        if (tema === 'claro') {
+            document.body.classList.remove('tema-escuro');
+            document.body.classList.add('tema-claro');
+        } else {
+            document.body.classList.remove('tema-claro');
+            document.body.classList.add('tema-escuro');
+        }
+    }
+
+    function exportarRelatorioClínico() {
+        alert(`Parecer Clínico-Pedagógico (Savio SPA BioLogics):\n\n- Módulo: ${moduloAtivo.toUpperCase()}\n- Atenção Média: ${nivelFoco}%\n- Acertos: ${acertos} | Erros: ${erros}\n- Status: Sistema operando com estabilidade biométrica.`);
+    }
+
+    function baixarHTMLCompleto() {
+        const blob = new Blob([document.documentElement.outerHTML], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'savio_spa_biologics_suite_completa_ar.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    window.onload = () => {
+        iniciarWebcamIA();
+        mudarModulo();
+    };
+</script>
+
+</body>
+</html>
